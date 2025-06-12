@@ -1,0 +1,50 @@
+# Ignore build outputs
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# Rider settings
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet packages
+*.nupkg
+packages/
+.nuget/
+
+# Build results
+*.dll
+*.exe
+*.app
+*.pdb
+
+# Publish output
+publish/
+
+# Others
+*.swp
+
+# Ignore all bin/ and obj/ folders in both main and test projects
+FysicManagerAPI/bin/
+FysicManagerAPI/obj/
+FysicManagerAPI.Tests/bin/
+FysicManagerAPI.Tests/obj/
