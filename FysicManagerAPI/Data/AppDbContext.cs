@@ -1,0 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using FysicManagerAPI.Models;
+
+namespace FysicManagerAPI.Data
+{
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+    {
+        public DbSet<Practice> Practices { get; set; }
+        public DbSet<Patient> Patients { get; set; }
+        // Add other DbSets for your models as needed
+    }
+}

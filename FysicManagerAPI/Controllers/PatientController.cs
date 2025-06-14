@@ -1,90 +1,96 @@
 using System.Text.Json;
+using FysicManagerAPI.Data;
 using FysicManagerAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FysicManagerAPI.Controllers;
 
-public class PatientController(ILogger<PatientController> logger) : ControllerBase
+public class PatientController(ILogger<PatientController> logger, AppDbContext context) : ControllerBase
 {
+    private readonly ILogger<PatientController> _logger = logger;
+    private readonly AppDbContext _context = context;
+
     [HttpGet]
     [Route("api/patient/{id}")]
-    public IActionResult GetPatient(int id)
+    public IActionResult GetPatient(string id)
     {
-        // Simulate fetching patient data
-        var patient = new { Id = id, Name = "John Doe", Age = 30 };
-
+        var patient = _context.Patients.Find(id);
+        if (patient == null)
+        {
+            _logger.LogWarning("Patient with ID {Id} not found", id);
+            return NotFound();
+        }
+        _logger.LogInformation("Fetched patient: {PatientJson}", JsonSerializer.Serialize(patient));
         return Ok(patient);
     }
 
     [HttpPost]
     [Route("api/patient")]
-    public IActionResult CreatePatient([FromBody] dynamic patientData)
+    public IActionResult CreatePatient([FromBody] Patient patient)
     {
-        // Simulate creating a new patient
-        logger.LogInformation("Creating a new patient with data: {PatientData}", (object)patientData);
-        JsonElement patientJson = JsonSerializer.Deserialize<JsonElement>(patientData.ToString());
-        Patient patient = new()
+        if (patient == null)
         {
-            FirstName = patientJson.GetProperty("firstName").GetString(),
-            LastName = patientJson.GetProperty("lastName").GetString(),
-            Initials = patientJson.GetProperty("initials").GetString(),
-            DateOfBirth = patientJson.GetProperty("dateOfBirth").GetDateTime(),
-            Email = patientJson.GetProperty("email").GetString(),
-            PhoneNumber = patientJson.GetProperty("phoneNumber").GetString(),
-            Address = patientJson.GetProperty("address").GetString(),
-            PostalCode = patientJson.GetProperty("postalCode").GetString(),
-            City = patientJson.GetProperty("city").GetString(),
-            Country = patientJson.GetProperty("country").GetString()
-        };
-        logger.LogInformation("Patient created: {@Patient}", patient);
-        return CreatedAtAction(nameof(GetPatient), new { id = 1 }, patientData);
+            _logger.LogError("Received null patient data");
+            return BadRequest("Patient data cannot be null");
+        }
+        _context.Patients.Add(patient);
+        _context.SaveChanges();
+        _logger.LogInformation("Patient created: {PatientJson}", JsonSerializer.Serialize(patient));
+        return CreatedAtAction(nameof(GetPatient), new { id = patient.Id }, patient);
     }
 
     [HttpPut]
     [Route("api/patient/{id}")]
-    public IActionResult UpdatePatient(string id, [FromBody] dynamic patientData)
+    public IActionResult UpdatePatient(string id, [FromBody] Patient patient)
     {
-        // Simulate fetching the existing patient (in real code, fetch from DB)
-        Patient patient = new()
+        if (patient == null || patient.Id != id)
         {
-            Id = id,
-            FirstName = "ExistingFirstName",
-            LastName = "ExistingLastName",
-            Initials = "E.F.",
-            DateOfBirth = DateTime.Now.AddYears(-30),
-            Email = "existing@email.com",
-            PhoneNumber = "1234567890",
-            Address = "Existing Address",
-            PostalCode = "1234AB",
-            City = "Existing City",
-            Country = "Existing Country"
-        };
+            _logger.LogError("Received invalid patient data for update");
+            return BadRequest("Invalid patient data");
+        }
+        var existing = _context.Patients.Find(id);
+        if (existing == null)
+        {
+            _logger.LogWarning("Patient with ID {Id} not found for update", id);
+            return NotFound();
+        }
+        existing.FirstName = patient.FirstName;
+        existing.LastName = patient.LastName;
+        existing.Initials = patient.Initials;
+        existing.DateOfBirth = patient.DateOfBirth;
+        existing.Email = patient.Email;
+        existing.PhoneNumber = patient.PhoneNumber;
+        existing.Address = patient.Address;
+        existing.PostalCode = patient.PostalCode;
+        existing.City = patient.City;
+        existing.Country = patient.Country;
+        _context.SaveChanges();
+        _logger.LogInformation("Patient updated: {PatientJson}", JsonSerializer.Serialize(existing));
+        return Ok(existing);
+    }
 
-        logger.LogInformation("Updating patient with ID {Id} with data: {PatientData}", id, (object)patientData);
-        JsonElement patientJson = JsonSerializer.Deserialize<JsonElement>(patientData.ToString());
+    [HttpDelete]
+    [Route("api/patient/{id}")]
+    public IActionResult DeletePatient(string id)
+    {
+        var patient = _context.Patients.Find(id);
+        if (patient == null)
+        {
+            _logger.LogWarning("Patient with ID {Id} not found for deletion", id);
+            return NotFound();
+        }
+        _context.Patients.Remove(patient);
+        _context.SaveChanges();
+        _logger.LogInformation("Deleted patient with ID {Id}: {PatientJson}", id, JsonSerializer.Serialize(patient));
+        return Ok(new { Message = "Patient deleted successfully", Patient = patient });
+    }
 
-        if (patientJson.TryGetProperty("firstName", out var firstNameProp))
-            patient.FirstName = firstNameProp.GetString();
-        if (patientJson.TryGetProperty("lastName", out var lastNameProp))
-            patient.LastName = lastNameProp.GetString();
-        if (patientJson.TryGetProperty("initials", out var initialsProp))
-            patient.Initials = initialsProp.GetString();
-        if (patientJson.TryGetProperty("dateOfBirth", out var dobProp) && dobProp.ValueKind == JsonValueKind.String && DateTime.TryParse(dobProp.GetString(), out var dob))
-            patient.DateOfBirth = dob;
-        if (patientJson.TryGetProperty("email", out var emailProp))
-            patient.Email = emailProp.GetString();
-        if (patientJson.TryGetProperty("phoneNumber", out var phoneProp))
-            patient.PhoneNumber = phoneProp.GetString();
-        if (patientJson.TryGetProperty("address", out var addressProp))
-            patient.Address = addressProp.GetString();
-        if (patientJson.TryGetProperty("postalCode", out var postalProp))
-            patient.PostalCode = postalProp.GetString();
-        if (patientJson.TryGetProperty("city", out var cityProp))
-            patient.City = cityProp.GetString();
-        if (patientJson.TryGetProperty("country", out var countryProp))
-            patient.Country = countryProp.GetString();
-
-        logger.LogInformation("Patient updated: {@Patient}", patient);
-        return Ok(new { Message = "Patient updated successfully", Patient = patient });
+    [HttpGet]
+    [Route("api/patient")]
+    public IActionResult GetAllPatients()
+    {
+        var patients = _context.Patients.ToList();
+        _logger.LogInformation("Fetched all patients: {PatientsJson}", JsonSerializer.Serialize(patients));
+        return Ok(patients);
     }
 }
