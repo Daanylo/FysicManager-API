@@ -10,12 +10,12 @@ public record Appointment
     public string? PatientId { get; set; }
     [JsonPropertyName("therapistId")]
     public string? TherapistId { get; set; }
+    [JsonPropertyName("practiceId")]
+    public string? PracticeId { get; set; }
     [JsonPropertyName("appointmentTypeId")]
     public string? AppointmentTypeId { get; set; }
-    [JsonPropertyName("appointmentDate")]
-    public DateTime AppointmentDate { get; set; }
-    [JsonPropertyName("startTime")]
-    public TimeSpan StartTime { get; set; }
+    [JsonPropertyName("time")]
+    public DateTime Time { get; set; }
     [JsonPropertyName("duration")]
     public TimeSpan Duration { get; set; }
     [JsonPropertyName("notes")]

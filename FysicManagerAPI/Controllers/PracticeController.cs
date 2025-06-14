@@ -5,14 +5,14 @@ using FysicManagerAPI.Data;
 using System.Text.Json;
 
 [ApiController]
+[Route("api/practice")]
 public class PracticeController(ILogger<PracticeController> logger, AppDbContext context) : ControllerBase
 {
     private readonly ILogger<PracticeController> _logger = logger;
     private readonly AppDbContext _context = context;
 
     [HttpGet]
-    [Route("api/practices")]
-    public IActionResult GetPractices()
+    public IActionResult GetAll()
     {
         var practices = _context.Practices.ToList();
         if (practices == null || !practices.Any())
@@ -24,9 +24,8 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         return Ok(practices);
     }
 
-    [HttpGet]
-    [Route("api/practice/{id}")]
-    public IActionResult GetPractice(string id)
+    [HttpGet("{id}")]
+    public IActionResult Get(string id)
     {
         var practice = _context.Practices.Find(id);
         if (practice == null)
@@ -39,8 +38,7 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
     }
 
     [HttpPost]
-    [Route("api/practice")]
-    public IActionResult CreatePractice([FromBody] Practice practice)
+    public IActionResult Create([FromBody] Practice practice)
     {
         if (practice == null)
         {
@@ -55,12 +53,11 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         _context.Practices.Add(practice);
         _context.SaveChanges();
         _logger.LogInformation("Created new practice: {PracticeJson}", JsonSerializer.Serialize(practice));
-        return CreatedAtAction(nameof(GetPractice), new { id = practice.Id }, practice);
+        return CreatedAtAction(nameof(Get), new { id = practice.Id }, practice);
     }
 
-    [HttpPut]
-    [Route("api/practice/{id}")]
-    public IActionResult UpdatePractice(string id, [FromBody] Practice practice)
+    [HttpPut("{id}")]
+    public IActionResult Update(string id, [FromBody] Practice practice)
     {
         if (practice == null)
         {
@@ -89,9 +86,8 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         return Ok(existing);
     }
 
-    [HttpDelete]
-    [Route("api/practice/{id}")]
-    public IActionResult DeletePractice(string id)
+    [HttpDelete("{id}")]
+    public IActionResult Delete(string id)
     {
         var practice = _context.Practices.Find(id);
         if (practice == null)
@@ -103,14 +99,5 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         _context.SaveChanges();
         _logger.LogInformation("Deleted practice with ID {Id}: {PracticeJson}", id, JsonSerializer.Serialize(practice));
         return Ok(new { Message = "Practice deleted successfully", Practice = practice });
-    }
-
-    [HttpGet]
-    [Route("api/practice")]
-    public IActionResult GetAllPractices()
-    {
-        var practices = _context.Practices.ToList();
-        _logger.LogInformation("Fetched all practices: {PracticesJson}", JsonSerializer.Serialize(practices));
-        return Ok(practices);
     }
 }

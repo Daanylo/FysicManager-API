@@ -7,6 +7,7 @@ namespace FysicManagerAPI.Data
     {
         public DbSet<Practice> Practices { get; set; }
         public DbSet<Patient> Patients { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
         // Add other DbSets for your models as needed
     }
 }

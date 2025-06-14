@@ -23,6 +23,20 @@ public static class DbSeeder
                 new() { FirstName = "Jane", LastName = "Smith", Initials = "J.S.", DateOfBirth = new DateTime(1985,5,20), Email = "jane.smith@email.com", PhoneNumber = "0687654321", Address = "Patient St 2", PostalCode = "4321BA", City = "Rotterdam", Country = "Netherlands" }
             });
         }
+        if (!db.Appointments.Any())
+        {
+            var patient1 = db.Patients.FirstOrDefault(p => p.Email == "john.doe@email.com");
+            var patient2 = db.Patients.FirstOrDefault(p => p.Email == "jane.smith@email.com");
+
+            var practice1 = db.Practices.FirstOrDefault(p => p.Name == "Fysio One");
+            var practice2 = db.Practices.FirstOrDefault(p => p.Name == "Fysio Two");
+
+            db.Appointments.AddRange(new List<Appointment>
+            {
+                new() { PatientId = patient1?.Id, PracticeId = practice1?.Id, Time = new DateTime(2025, 6, 14, 12, 00, 00), Duration = new TimeSpan(25), Notes = "" },
+                new() { PatientId = patient2?.Id, PracticeId = practice2?.Id, Time = new DateTime(2023, 6, 14, 12, 00, 00), Duration = new TimeSpan(25), Notes = "" }
+            });
+        }
         db.SaveChanges();
     }
 }

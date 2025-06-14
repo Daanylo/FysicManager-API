@@ -12,7 +12,7 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
 
     [HttpGet]
     [Route("api/patient/{id}")]
-    public IActionResult GetPatient(string id)
+    public IActionResult Get(string id)
     {
         var patient = _context.Patients.Find(id);
         if (patient == null)
@@ -26,7 +26,7 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
 
     [HttpPost]
     [Route("api/patient")]
-    public IActionResult CreatePatient([FromBody] Patient patient)
+    public IActionResult Create([FromBody] Patient patient)
     {
         if (patient == null)
         {
@@ -36,12 +36,12 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
         _context.Patients.Add(patient);
         _context.SaveChanges();
         _logger.LogInformation("Patient created: {PatientJson}", JsonSerializer.Serialize(patient));
-        return CreatedAtAction(nameof(GetPatient), new { id = patient.Id }, patient);
+        return CreatedAtAction(nameof(Get), new { id = patient.Id }, patient);
     }
 
     [HttpPut]
     [Route("api/patient/{id}")]
-    public IActionResult UpdatePatient(string id, [FromBody] Patient patient)
+    public IActionResult Update(string id, [FromBody] Patient patient)
     {
         if (patient == null || patient.Id != id)
         {
@@ -71,7 +71,7 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
 
     [HttpDelete]
     [Route("api/patient/{id}")]
-    public IActionResult DeletePatient(string id)
+    public IActionResult Delete(string id)
     {
         var patient = _context.Patients.Find(id);
         if (patient == null)
@@ -87,7 +87,7 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
 
     [HttpGet]
     [Route("api/patient")]
-    public IActionResult GetAllPatients()
+    public IActionResult GetAll()
     {
         var patients = _context.Patients.ToList();
         _logger.LogInformation("Fetched all patients: {PatientsJson}", JsonSerializer.Serialize(patients));
