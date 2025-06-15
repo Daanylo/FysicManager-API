@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Xml;
+using FysicManagerAPI.Models.DTOs;
 
 namespace FysicManagerAPI.Models;
 
@@ -27,4 +28,39 @@ public record Patient
     public string? City { get; set; }
     [JsonPropertyName("country")]
     public string? Country { get; set; }
+    [JsonPropertyName("appointments")]
+    public List<Appointment>? Appointments { get; set; } = [];
+
+    public PatientDTO ToDTO()
+    {
+        return new PatientDTO
+        {
+            Id = Id,
+            FirstName = FirstName,
+            LastName = LastName,
+            Initials = Initials,
+            DateOfBirth = DateOfBirth,
+            Email = Email,
+            PhoneNumber = PhoneNumber,
+            Address = Address,
+            PostalCode = PostalCode,
+            City = City,
+            Country = Country,
+            Appointments = Appointments?.Select(a => a.ToSummaryDTO()).ToList()
+        };
+    }
+
+    public PatientSummaryDTO ToSummaryDTO()
+    {
+        return new PatientSummaryDTO
+        {
+            Id = Id,
+            FirstName = FirstName,
+            LastName = LastName,
+            Initials = Initials,
+            DateOfBirth = DateOfBirth,
+            Email = Email,
+            PhoneNumber = PhoneNumber
+        };
+    }
 }

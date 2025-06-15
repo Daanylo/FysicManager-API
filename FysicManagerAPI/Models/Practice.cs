@@ -1,6 +1,8 @@
 namespace FysicManagerAPI.Models;
 
 using System.Text.Json.Serialization;
+using FysicManagerAPI.Models.DTOs;
+
 public class Practice
 {
     [JsonPropertyName("id")]
@@ -26,8 +28,45 @@ public class Practice
 
     [JsonPropertyName("email")]
     public string? Email { get; set; }
+
     [JsonPropertyName("website")]
     public string? Website { get; set; }
+
     [JsonPropertyName("color")]
     public string? Color { get; set; }
+
+    [JsonPropertyName("therapists")]
+    public List<Therapist>? Therapists { get; set; } = [];
+
+    public PracticeDTO ToDTO()
+    {
+        return new PracticeDTO
+        {
+            Id = Id,
+            Name = Name,
+            Address = Address,
+            PostalCode = PostalCode,
+            City = City,
+            Country = Country,
+            PhoneNumber = PhoneNumber,
+            Email = Email,
+            Website = Website,
+            Color = Color,
+            Therapists = Therapists?.Select(t => t.ToSummaryDTO()).ToList()
+        };
+    }
+
+    public PracticeSummaryDTO ToSummaryDTO()
+    {
+        return new PracticeSummaryDTO
+        {
+            Id = Id,
+            Name = Name,
+            Address = Address,
+            PostalCode = PostalCode,
+            City = City,
+            Country = Country,
+            PhoneNumber = PhoneNumber
+        };
+    }
 }

@@ -29,9 +29,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapControllerRoute(
-    name: "patient",
-    pattern: "api/patient/{id?}",
-    defaults: new { controller = "Patient", action = "GetPatient" }
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}"
 );
 
 app.Run();

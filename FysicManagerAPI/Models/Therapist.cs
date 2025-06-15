@@ -1,6 +1,7 @@
 namespace FysicManagerAPI.Models;
 
 using System.Text.Json.Serialization;
+using FysicManagerAPI.Models.DTOs;
 
 public class Therapist
 {
@@ -10,8 +11,8 @@ public class Therapist
     [JsonPropertyName("name")]
     public string? Name { get; set; }
 
-    [JsonPropertyName("specialization")]
-    public string? Specialization { get; set; }
+    [JsonPropertyName("specializations")]
+    public List<Specialization>? Specializations { get; set; }
 
     [JsonPropertyName("phoneNumber")]
     public string? PhoneNumber { get; set; }
@@ -19,6 +20,30 @@ public class Therapist
     [JsonPropertyName("email")]
     public string? Email { get; set; }
 
-    [JsonPropertyName("practiceId")]
-    public string? PracticeId { get; set; }
+    [JsonPropertyName("practices")]
+    public List<Practice>? Practices { get; set; } = [];
+
+    
+
+    public TherapistDTO ToDTO()
+    {
+        return new TherapistDTO
+        {
+            Id = Id,
+            Name = Name,
+            PhoneNumber = PhoneNumber,
+            Email = Email
+        };
+    }
+
+    public TherapistSummaryDTO ToSummaryDTO()
+    {
+        return new TherapistSummaryDTO
+        {
+            Id = Id,
+            Name = Name,
+            PhoneNumber = PhoneNumber,
+            Email = Email
+        };
+    }
 }
