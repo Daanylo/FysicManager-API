@@ -92,7 +92,7 @@ public static class DbSeeder
                     Therapist = therapist1,
                     AppointmentType = appointmentType1 ?? new AppointmentType { Name = "1000 - behandeling fysiotherapie", Description = "Standaard fysiotherapie behandeling in praktijk" },
                     Time = new DateTime(2025, 6, 14, 12, 00, 00),
-                    Duration = TimeSpan.FromMinutes(25),
+                    Duration = 25,
                     Notes = ""
                 },
                 new()
@@ -102,7 +102,7 @@ public static class DbSeeder
                     Therapist = therapist2,
                     AppointmentType = appointmentType2 ?? new AppointmentType { Name = "1864 - intake en onderzoek fysiotherapie", Description = "Intake en onderzoek voor fysiotherapie" },
                     Time = new DateTime(2025, 6, 14, 13, 00, 00),
-                    Duration = TimeSpan.FromMinutes(25),
+                    Duration = 25,
                     Notes = ""
                 }
             });

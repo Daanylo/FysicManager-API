@@ -12,15 +12,16 @@ public record AppointmentDTO
 
     [JsonPropertyName("therapist")]
     public required TherapistSummaryDTO Therapist { get; set; }
+    [JsonPropertyName("practice")]
+    public required PracticeSummaryDTO Practice { get; set; }
 
     [JsonPropertyName("appointmentType")]
     public required AppointmentType AppointmentType { get; set; }
 
-    [JsonPropertyName("startTime")]
-    public DateTime StartTime { get; set; }
-
-    [JsonPropertyName("endTime")]
-    public DateTime EndTime { get; set; }
+    [JsonPropertyName("time")]
+    public DateTime Time { get; set; }
+    [JsonPropertyName("duration")]
+    public int Duration { get; set; }
 
     [JsonPropertyName("notes")]
     public string? Notes { get; set; }
@@ -36,15 +37,16 @@ public record AppointmentSummaryDTO
 
     [JsonPropertyName("therapist")]
     public required TherapistSummaryDTO Therapist { get; set; }
+    [JsonPropertyName("practice")]
+    public required PracticeSummaryDTO Practice { get; set; }
 
     [JsonPropertyName("appointmentType")]
     public required AppointmentType AppointmentType { get; set; }
 
-    [JsonPropertyName("startTime")]
-    public DateTime StartTime { get; set; }
-
-    [JsonPropertyName("endTime")]
-    public DateTime EndTime { get; set; }
+    [JsonPropertyName("time")]
+    public DateTime Time { get; set; }
+    [JsonPropertyName("duration")]
+    public int Duration { get; set; }
 
     [JsonPropertyName("notes")]
     public string? Notes { get; set; }

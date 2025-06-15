@@ -11,5 +11,6 @@ namespace FysicManagerAPI.Data
         public DbSet<Therapist> Therapists { get; set; }
         public DbSet<Specialization> Specializations { get; set; }
         public DbSet<AppointmentType> AppointmentTypes { get; set; }
+        public DbSet<Workshift> Workshifts { get; set; }
     }
 }

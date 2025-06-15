@@ -22,6 +22,8 @@ public class Therapist
 
     [JsonPropertyName("practices")]
     public List<Practice>? Practices { get; set; } = [];
+    [JsonPropertyName("workshifts")]
+    public List<Workshift>? Workshifts { get; set; } = [];
 
     
 
@@ -32,7 +34,10 @@ public class Therapist
             Id = Id,
             Name = Name,
             PhoneNumber = PhoneNumber,
-            Email = Email
+            Email = Email,
+            Specializations = Specializations,
+            Practices = Practices?.Select(p => p.ToSummaryDTO()).ToList(),
+            Workshifts = Workshifts?.Select(w => w.ToSummaryDTO()).ToList()
         };
     }
 

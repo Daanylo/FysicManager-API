@@ -39,8 +39,22 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
         return Ok(therapist);
     }
 
+    [HttpGet("{id}/workshifts")]
+    public IActionResult GetWorkshifts(string id)
+    {
+        var therapist = _context.Therapists.Include(t => t.Workshifts).FirstOrDefault(t => t.Id == id);
+        if (therapist == null)
+        {
+            _logger.LogWarning("Therapist with ID {Id} not found", id);
+            return NotFound();
+        }
+        var workshifts = therapist.Workshifts?.Select(ws => ws.ToSummaryDTO()).ToList();
+        _logger.LogInformation("Fetched workshifts for therapist {Id}: {WorkshiftsJson}", id, JsonSerializer.Serialize(workshifts));
+        return Ok(workshifts);
+    }
+
     [HttpPost]
-    public IActionResult Create([FromBody] Therapist therapist)
+    public IActionResult Create(string id, [FromBody] Therapist therapist)
     {
         if (therapist == null)
         {

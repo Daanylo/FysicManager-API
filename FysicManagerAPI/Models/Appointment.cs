@@ -18,7 +18,7 @@ public record Appointment
     [JsonPropertyName("time")]
     public DateTime Time { get; set; }
     [JsonPropertyName("duration")]
-    public TimeSpan Duration { get; set; }
+    public int Duration { get; set; }
     [JsonPropertyName("notes")]
     public string? Notes { get; set; }
 
@@ -29,9 +29,10 @@ public record Appointment
             Id = Id,
             Patient = Patient.ToSummaryDTO(),
             Therapist = Therapist.ToSummaryDTO(),
+            Practice = Practice.ToSummaryDTO(),
             AppointmentType = AppointmentType,
-            StartTime = Time,
-            EndTime = Time.Add(Duration),
+            Time = Time,
+            Duration = Duration,
             Notes = Notes
         };
     }
@@ -43,9 +44,10 @@ public record Appointment
             Id = Id,
             Patient = Patient.ToSummaryDTO(),
             Therapist = Therapist.ToSummaryDTO(),
+            Practice = Practice.ToSummaryDTO(),
             AppointmentType = AppointmentType,
-            StartTime = Time,
-            EndTime = Time.Add(Duration),
+            Time = Time,
+            Duration = Duration,
             Notes = Notes
         };
     }

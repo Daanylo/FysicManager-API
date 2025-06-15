@@ -22,6 +22,8 @@ public record TherapistDTO
 
     [JsonPropertyName("practices")]
     public List<PracticeSummaryDTO>? Practices { get; set; } = [];
+    [JsonPropertyName("workshifts")]
+    public List<WorkshiftSummaryDTO>? Workshifts { get; set; } = [];
 
 }
 
