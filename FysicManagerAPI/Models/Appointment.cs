@@ -27,24 +27,9 @@ public record Appointment
         return new AppointmentDTO
         {
             Id = Id,
-            Patient = Patient.ToSummaryDTO(),
-            Therapist = Therapist.ToSummaryDTO(),
-            Practice = Practice.ToSummaryDTO(),
-            AppointmentType = AppointmentType,
-            Time = Time,
-            Duration = Duration,
-            Notes = Notes
-        };
-    }
-
-    public AppointmentSummaryDTO ToSummaryDTO()
-    {
-        return new AppointmentSummaryDTO
-        {
-            Id = Id,
-            Patient = Patient.ToSummaryDTO(),
-            Therapist = Therapist.ToSummaryDTO(),
-            Practice = Practice.ToSummaryDTO(),
+            PatientId = Patient.Id,
+            TherapistId = Therapist.Id,
+            PracticeId = Practice.Id,
             AppointmentType = AppointmentType,
             Time = Time,
             Duration = Duration,

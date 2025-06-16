@@ -48,21 +48,6 @@ public record Patient
             PostalCode = PostalCode,
             City = City,
             Country = Country,
-            Appointments = Appointments?.Select(a => a.ToSummaryDTO()).ToList()
-        };
-    }
-
-    public PatientSummaryDTO ToSummaryDTO()
-    {
-        return new PatientSummaryDTO
-        {
-            Id = Id,
-            FirstName = FirstName,
-            LastName = LastName,
-            Initials = Initials,
-            DateOfBirth = DateOfBirth,
-            Email = Email,
-            PhoneNumber = PhoneNumber
         };
     }
 }

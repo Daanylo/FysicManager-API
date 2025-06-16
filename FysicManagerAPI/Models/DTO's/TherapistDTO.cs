@@ -17,27 +17,4 @@ public record TherapistDTO
     [JsonPropertyName("email")]
     public string? Email { get; set; }
 
-    [JsonPropertyName("specializations")]
-    public List<Specialization>? Specializations { get; set; } = [];
-
-    [JsonPropertyName("practices")]
-    public List<PracticeSummaryDTO>? Practices { get; set; } = [];
-    [JsonPropertyName("workshifts")]
-    public List<WorkshiftSummaryDTO>? Workshifts { get; set; } = [];
-
-}
-
-public record TherapistSummaryDTO
-{
-    [JsonPropertyName("id")]
-    public string Id { get; init; } = Guid.NewGuid().ToString();
-
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
-
-    [JsonPropertyName("phoneNumber")]
-    public string? PhoneNumber { get; set; }
-
-    [JsonPropertyName("email")]
-    public string? Email { get; set; }
 }

@@ -26,20 +26,7 @@ public class Workshift
             Id = Id,
             StartTime = StartTime,
             EndTime = EndTime,
-            Therapist = Therapist.ToSummaryDTO(),
-            Practice = Practice.ToSummaryDTO()
-        };
-    }
-
-    public WorkshiftSummaryDTO ToSummaryDTO()
-    {
-        return new WorkshiftSummaryDTO
-        {
-            Id = Id,
-            StartTime = StartTime,
-            EndTime = EndTime,
-            Therapist = Therapist.ToSummaryDTO(),
-            Practice = Practice.ToSummaryDTO()
+            Practice = Practice.ToDTO()
         };
     }
 }

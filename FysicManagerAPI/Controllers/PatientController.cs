@@ -2,16 +2,18 @@ using System.Text.Json;
 using FysicManagerAPI.Data;
 using FysicManagerAPI.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FysicManagerAPI.Controllers;
 
+[ApiController]
+[Route("api/patient")]
 public class PatientController(ILogger<PatientController> logger, AppDbContext context) : ControllerBase
 {
     private readonly ILogger<PatientController> _logger = logger;
     private readonly AppDbContext _context = context;
 
-    [HttpGet]
-    [Route("api/patient/{id}")]
+    [HttpGet("{id}")]
     public IActionResult Get(string id)
     {
         var patient = _context.Patients.Find(id);
@@ -24,8 +26,21 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
         return Ok(patient);
     }
 
+    [HttpGet("{id}/appointments")]
+    public IActionResult GetAppointments(string id)
+    {
+        var patient = _context.Patients.Include(p => p.Appointments).FirstOrDefault(p => p.Id == id);
+        if (patient == null)
+        {
+            _logger.LogWarning("Patient with ID {Id} not found", id);
+            return NotFound();
+        }
+        var appointments = patient.Appointments?.Select(a => a.ToDTO()).ToList();
+        _logger.LogInformation("Fetched appointments for patient {Id}: {AppointmentsJson}", id, JsonSerializer.Serialize(appointments));
+        return Ok(appointments);
+    }
+
     [HttpPost]
-    [Route("api/patient")]
     public IActionResult Create([FromBody] Patient patient)
     {
         if (patient == null)
@@ -39,8 +54,7 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
         return CreatedAtAction(nameof(Get), new { id = patient.Id }, patient);
     }
 
-    [HttpPut]
-    [Route("api/patient/{id}")]
+    [HttpPut("{id}")]
     public IActionResult Update(string id, [FromBody] Patient patient)
     {
         if (patient == null || patient.Id != id)
@@ -69,8 +83,7 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
         return Ok(existing);
     }
 
-    [HttpDelete]
-    [Route("api/patient/{id}")]
+    [HttpDelete("{id}")]
     public IActionResult Delete(string id)
     {
         var patient = _context.Patients.Find(id);
@@ -85,8 +98,7 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
         return Ok(new { Message = "Patient deleted successfully", Patient = patient });
     }
 
-    [HttpGet]
-    [Route("api/patient")]
+    [HttpGet("all")]
     public IActionResult GetAll()
     {
         var patients = _context.Patients.ToList();

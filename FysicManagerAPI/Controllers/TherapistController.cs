@@ -13,7 +13,7 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
     private readonly ILogger<TherapistController> _logger = logger;
     private readonly AppDbContext _context = context;
 
-    [HttpGet]
+    [HttpGet("all")]
     public IActionResult GetAll()
     {
         var therapists = _context.Therapists.ToList();
@@ -48,9 +48,51 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
             _logger.LogWarning("Therapist with ID {Id} not found", id);
             return NotFound();
         }
-        var workshifts = therapist.Workshifts?.Select(ws => ws.ToSummaryDTO()).ToList();
+        var workshifts = therapist.Workshifts?.Select(ws => ws.ToDTO()).ToList();
         _logger.LogInformation("Fetched workshifts for therapist {Id}: {WorkshiftsJson}", id, JsonSerializer.Serialize(workshifts));
         return Ok(workshifts);
+    }
+
+    [HttpGet("{id}/practices")]
+    public IActionResult GetPractices(string id)
+    {
+        var therapist = _context.Therapists.Include(t => t.Practices).FirstOrDefault(t => t.Id == id);
+        if (therapist == null)
+        {
+            _logger.LogWarning("Therapist with ID {Id} not found", id);
+            return NotFound();
+        }
+        var practices = therapist.Practices?.Select(p => p.ToDTO()).ToList();
+        _logger.LogInformation("Fetched practices for therapist {Id}: {PracticesJson}", id, JsonSerializer.Serialize(practices));
+        return Ok(practices);
+    }
+
+    [HttpGet("{id}/specializations")]
+    public IActionResult GetSpecializations(string id)
+    {
+        var therapist = _context.Therapists.Include(t => t.Specializations).FirstOrDefault(t => t.Id == id);
+        if (therapist == null)
+        {
+            _logger.LogWarning("Therapist with ID {Id} not found", id);
+            return NotFound();
+        }
+        var specializations = therapist.Specializations?.ToList();
+        _logger.LogInformation("Fetched specializations for therapist {Id}: {SpecializationsJson}", id, JsonSerializer.Serialize(specializations));
+        return Ok(specializations);
+    }
+
+    [HttpGet("{id}/appointments")]
+    public IActionResult GetAppointments(string id)
+    {
+        var therapist = _context.Therapists.Include(t => t.Appointments).FirstOrDefault(t => t.Id == id);
+        if (therapist == null)
+        {
+            _logger.LogWarning("Therapist with ID {Id} not found", id);
+            return NotFound();
+        }
+        var appointments = therapist.Appointments?.Select(a => a.ToDTO()).ToList();
+        _logger.LogInformation("Fetched appointments for therapist {Id}: {AppointmentsJson}", id, JsonSerializer.Serialize(appointments));
+        return Ok(appointments);
     }
 
     [HttpPost]

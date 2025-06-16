@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using FysicManagerAPI.Models;
 using FysicManagerAPI.Data;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/practice")]
@@ -11,11 +12,11 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
     private readonly ILogger<PracticeController> _logger = logger;
     private readonly AppDbContext _context = context;
 
-    [HttpGet]
+    [HttpGet("all")]
     public IActionResult GetAll()
     {
         var practices = _context.Practices.ToList();
-        if (practices == null || !practices.Any())
+        if (practices == null || practices.Count == 0)
         {
             _logger.LogInformation("No practices found");
             return NotFound("No practices found");
@@ -35,6 +36,20 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         }
         _logger.LogInformation("Fetched practice data: {PracticeJson}", JsonSerializer.Serialize(practice));
         return Ok(practice);
+    }
+
+    [HttpGet("{id}/therapists")]
+    public IActionResult GetTherapists(string id)
+    {
+        var practice = _context.Practices.Include(p => p.Therapists).FirstOrDefault(p => p.Id == id);
+        if (practice == null)
+        {
+            _logger.LogWarning("Practice with ID {Id} not found", id);
+            return NotFound();
+        }
+        var therapists = practice.Therapists?.Select(t => t.ToDTO()).ToList();
+        _logger.LogInformation("Fetched therapists for practice {Id}: {TherapistsJson}", id, JsonSerializer.Serialize(therapists));
+        return Ok(therapists);
     }
 
     [HttpPost]

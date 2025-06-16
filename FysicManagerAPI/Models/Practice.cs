@@ -52,21 +52,6 @@ public class Practice
             Email = Email,
             Website = Website,
             Color = Color,
-            Therapists = Therapists?.Select(t => t.ToSummaryDTO()).ToList()
-        };
-    }
-
-    public PracticeSummaryDTO ToSummaryDTO()
-    {
-        return new PracticeSummaryDTO
-        {
-            Id = Id,
-            Name = Name,
-            Address = Address,
-            PostalCode = PostalCode,
-            City = City,
-            Country = Country,
-            PhoneNumber = PhoneNumber
         };
     }
 }

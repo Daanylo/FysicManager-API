@@ -26,31 +26,4 @@ public record PatientDTO
     public string? City { get; set; }
     [JsonPropertyName("country")]
     public string? Country { get; set; }
-
-    [JsonPropertyName("appointments")]
-    public List<AppointmentSummaryDTO>? Appointments { get; set; } = [];
-}
-
-public record PatientSummaryDTO
-{
-    [JsonPropertyName("id")]
-    public string Id { get; init; } = Guid.NewGuid().ToString();
-    
-    [JsonPropertyName("firstName")]
-    public string? FirstName { get; set; }
-    
-    [JsonPropertyName("lastName")]
-    public string? LastName { get; set; }
-    
-    [JsonPropertyName("initials")]
-    public string? Initials { get; set; }
-    
-    [JsonPropertyName("dateOfBirth")]
-    public DateTime DateOfBirth { get; set; }
-    
-    [JsonPropertyName("email")]
-    public string? Email { get; set; }
-    
-    [JsonPropertyName("phoneNumber")]
-    public string? PhoneNumber { get; set; }
 }
