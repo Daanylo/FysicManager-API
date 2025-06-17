@@ -1,6 +1,7 @@
 namespace FysicManagerAPI.Models;
 
 using System.Text.Json.Serialization;
+using FysicManagerAPI.Models.DTOs;
 
 public class Workshift
 {
@@ -17,16 +18,28 @@ public class Workshift
     public required Therapist Therapist { get; set; }
 
     [JsonPropertyName("practice")]
-    public required Practice Practice { get; set; }
-
-    public WorkshiftDTO ToDTO()
+    public required Practice Practice { get; set; }    public WorkshiftDTO ToDTO()
     {
         return new WorkshiftDTO
         {
             Id = Id,
             StartTime = StartTime,
             EndTime = EndTime,
-            Practice = Practice.ToDTO()
+            Therapist = Therapist?.ToDTO() ?? new TherapistDTO 
+            { 
+                Id = "unknown", 
+                Name = "Unknown Therapist", 
+                Email = "", 
+                PhoneNumber = "" 
+            },
+            Practice = Practice?.ToDTO() ?? new PracticeDTO 
+            { 
+                Id = "unknown", 
+                Name = "Unknown Practice", 
+                Address = "", 
+                PhoneNumber = "", 
+                Email = "" 
+            }
         };
     }
 }

@@ -45,8 +45,8 @@ public static class DbSeeder
         {
             db.Patients.AddRange(new List<Patient>
             {
-                new() { FirstName = "John", LastName = "Doe", Initials = "J.D.", DateOfBirth = new DateTime(1990,1,1), Email = "john.doe@email.com", PhoneNumber = "0612345678", Address = "Patient St 1", PostalCode = "1234AB", City = "Amsterdam", Country = "Netherlands" },
-                new() { FirstName = "Jane", LastName = "Smith", Initials = "J.S.", DateOfBirth = new DateTime(1985,5,20), Email = "jane.smith@email.com", PhoneNumber = "0687654321", Address = "Patient St 2", PostalCode = "4321BA", City = "Rotterdam", Country = "Netherlands" }
+                new() { FirstName = "John", LastName = "Doe", Initials = "J.D.", DateOfBirth = new DateTime(1990,1,1), Email = "john.doe@email.com", PhoneNumber = "0612345678", Address = "Patient St 1", PostalCode = "1234AB", City = "Amsterdam", Country = "Netherlands", BSN = "123456789" },
+                new() { FirstName = "Jane", LastName = "Smith", Initials = "J.S.", DateOfBirth = new DateTime(1985,5,20), Email = "jane.smith@email.com", PhoneNumber = "0687654321", Address = "Patient St 2", PostalCode = "4321BA", City = "Rotterdam", Country = "Netherlands", BSN = "987654321" }
             });
             db.SaveChanges();
         }
@@ -83,6 +83,10 @@ public static class DbSeeder
             var appointmentType1 = db.AppointmentTypes.FirstOrDefault(a => a.Name.StartsWith("1000"));
             var appointmentType2 = db.AppointmentTypes.FirstOrDefault(a => a.Name.StartsWith("1864"));
 
+            if (patient1 == null || patient2 == null || practice1 == null || practice2 == null || therapist1 == null || therapist2 == null)
+            {
+                throw new InvalidOperationException("Not all required entities are available for seeding appointments.");
+            }
             db.Appointments.AddRange(new List<Appointment>
             {
                 new()
@@ -107,6 +111,69 @@ public static class DbSeeder
                 }
             });
         }
+        
+        if (!db.Workshifts.Any())
+        {
+            var practice1 = db.Practices.FirstOrDefault(p => p.Name == "Fysio One");
+            var practice2 = db.Practices.FirstOrDefault(p => p.Name == "Fysio Two");
+
+            var therapist1 = db.Therapists.FirstOrDefault(t => t.Name == "Alice Johnson");
+            var therapist2 = db.Therapists.FirstOrDefault(t => t.Name == "Bob Brown");
+
+            if (practice1 == null || practice2 == null || therapist1 == null || therapist2 == null)
+            {
+                throw new InvalidOperationException("Not all required entities are available for seeding workshifts.");
+            }
+
+            var workshifts = new List<Workshift>();
+
+            // Create workshifts for June 16-18, 2025
+            for (int day = 16; day <= 18; day++)
+            {
+                var date = new DateTime(2025, 6, day);
+                
+                // Alice Johnson (Therapist 1) - Monday to Wednesday
+                // Morning shift: 8:00 - 12:00
+                workshifts.Add(new Workshift
+                {
+                    StartTime = new DateTime(2025, 6, day, 8, 0, 0),
+                    EndTime = new DateTime(2025, 6, day, 12, 0, 0),
+                    Therapist = therapist1,
+                    Practice = practice1
+                });
+                
+                // Afternoon shift: 13:00 - 17:00
+                workshifts.Add(new Workshift
+                {
+                    StartTime = new DateTime(2025, 6, day, 13, 0, 0),
+                    EndTime = new DateTime(2025, 6, day, 17, 0, 0),
+                    Therapist = therapist1,
+                    Practice = practice1
+                });
+
+                // Bob Brown (Therapist 2) - Monday to Wednesday
+                // Morning shift: 9:00 - 13:00
+                workshifts.Add(new Workshift
+                {
+                    StartTime = new DateTime(2025, 6, day, 9, 0, 0),
+                    EndTime = new DateTime(2025, 6, day, 13, 0, 0),
+                    Therapist = therapist2,
+                    Practice = practice2
+                });
+                
+                // Afternoon shift: 14:00 - 18:00
+                workshifts.Add(new Workshift
+                {
+                    StartTime = new DateTime(2025, 6, day, 14, 0, 0),
+                    EndTime = new DateTime(2025, 6, day, 18, 0, 0),
+                    Therapist = therapist2,
+                    Practice = practice2
+                });
+            }
+
+            db.Workshifts.AddRange(workshifts);
+        }
+        
         db.SaveChanges();
     }
 }

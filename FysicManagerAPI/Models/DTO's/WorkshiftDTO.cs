@@ -13,6 +13,8 @@ public class WorkshiftDTO
 
     [JsonPropertyName("endTime")]
     public required DateTime EndTime { get; set; }
+    [JsonPropertyName("therapist")]
+    public required TherapistDTO Therapist { get; set; }
 
     [JsonPropertyName("practice")]
     public required PracticeDTO Practice { get; set; }

@@ -41,6 +41,7 @@ public record Patient
             FirstName = FirstName,
             LastName = LastName,
             Initials = Initials,
+            BSN = BSN,
             DateOfBirth = DateOfBirth,
             Email = Email,
             PhoneNumber = PhoneNumber,

@@ -37,18 +37,25 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
         }
         _logger.LogInformation("Fetched therapist: {TherapistJson}", JsonSerializer.Serialize(therapist));
         return Ok(therapist.ToDTO());
-    }
-
-    [HttpGet("{id}/workshifts")]
+    }    [HttpGet("{id}/workshifts")]
     public IActionResult GetWorkshifts(string id)
     {
-        var therapist = _context.Therapists.Include(t => t.Workshifts).FirstOrDefault(t => t.Id == id);
+        var therapist = _context.Therapists.FirstOrDefault(t => t.Id == id);
         if (therapist == null)
         {
             _logger.LogWarning("Therapist with ID {Id} not found", id);
             return NotFound();
         }
-        var workshifts = therapist.Workshifts?.Select(ws => ws.ToDTO()).ToList();
+
+        // Load workshifts with all necessary related entities directly
+        var workshifts = _context.Workshifts
+            .Include(ws => ws.Practice)
+            .Include(ws => ws.Therapist)
+            .Where(ws => ws.Therapist.Id == id)
+            .ToList()
+            .Select(ws => ws.ToDTO())
+            .ToList();
+
         _logger.LogInformation("Fetched workshifts for therapist {Id}: {WorkshiftsJson}", id, JsonSerializer.Serialize(workshifts));
         return Ok(workshifts);
     }
@@ -96,6 +103,7 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
             .Include(a => a.Patient)
             .Include(a => a.Practice)
             .Include(a => a.Therapist)
+            .Include(a => a.AppointmentType)
             .Where(a => a.Therapist.Id == id)
             .ToList();
 

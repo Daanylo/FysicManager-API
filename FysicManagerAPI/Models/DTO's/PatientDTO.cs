@@ -12,6 +12,8 @@ public record PatientDTO
     public string? LastName { get; set; }
     [JsonPropertyName("initials")]
     public string? Initials { get; set; }
+    [JsonPropertyName("bsn")]
+    public string? BSN { get; set; }
     [JsonPropertyName("dateOfBirth")]
     public DateTime DateOfBirth { get; set; }
     [JsonPropertyName("email")]
