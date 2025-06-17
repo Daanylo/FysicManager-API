@@ -11,6 +11,19 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("FysicManagerDb"));
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", 
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
+
 var app = builder.Build();
 
 // Seed mock data
@@ -25,6 +38,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+// Enable CORS
+app.UseCors("AllowAllOrigins");
 
 app.UseHttpsRedirection();
 

@@ -1,6 +1,7 @@
 namespace FysicManagerAPI.Models;
 
 using System.Text.Json.Serialization;
+using FysicManagerAPI.Models.DTOs;
 
 public class Specialization
 {
@@ -12,5 +13,18 @@ public class Specialization
 
     [JsonPropertyName("description")]
     public string? Description { get; set; }
+    [JsonPropertyName("therapists")]
+    public List<Therapist>? Therapists { get; set; }
+
+    public SpecializationDTO ToDTO()
+    {
+        return new SpecializationDTO
+        {
+            Id = Id,
+            Name = Name,
+            Description = Description
+        };
+    }
 
 }
+

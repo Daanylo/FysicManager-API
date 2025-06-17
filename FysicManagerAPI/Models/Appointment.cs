@@ -11,7 +11,7 @@ public record Appointment
     public required Patient Patient { get; set; }
     [JsonPropertyName("therapist")]
     public required Therapist Therapist { get; set; }
-    [JsonPropertyName("practiceId")]
+    [JsonPropertyName("practice")]
     public required Practice Practice { get; set; }
     [JsonPropertyName("appointmentType")]
     public required AppointmentType AppointmentType { get; set; }
@@ -27,9 +27,27 @@ public record Appointment
         return new AppointmentDTO
         {
             Id = Id,
-            PatientId = Patient.Id,
-            TherapistId = Therapist.Id,
-            PracticeId = Practice.Id,
+            Patient = Patient?.ToDTO() ?? new PatientDTO { 
+                Id = "unknown", 
+                FirstName = "Unknown", 
+                LastName = "Patient", 
+                DateOfBirth = DateTime.MinValue, 
+                Email = "", 
+                PhoneNumber = "" 
+            },
+            Therapist = Therapist?.ToDTO() ?? new TherapistDTO { 
+                Id = "unknown", 
+                Name = "Unknown Therapist", 
+                Email = "", 
+                PhoneNumber = "" 
+            },
+            Practice = Practice?.ToDTO() ?? new PracticeDTO { 
+                Id = "unknown", 
+                Name = "Unknown Practice", 
+                Address = "", 
+                PhoneNumber = "", 
+                Email = "" 
+            },
             AppointmentType = AppointmentType,
             Time = Time,
             Duration = Duration,

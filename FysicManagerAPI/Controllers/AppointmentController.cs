@@ -21,6 +21,7 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
             .Include(a => a.Patient)
             .Include(a => a.Therapist)
             .Include(a => a.AppointmentType)
+            .Include(a => a.Practice)
             .ToList()
             .Select(a => a.ToDTO())
             .ToList();
@@ -53,6 +54,7 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         .Include(a => a.AppointmentType)
         .Include(a => a.Patient)
         .Include(a => a.Therapist)
+        .Include(a => a.Practice)
         .ToList()
         .Select(a => a.ToDTO())
         .ToList();
@@ -67,6 +69,7 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         .Include(a => a.AppointmentType)
         .Include(a => a.Patient)
         .Include(a => a.Therapist)
+        .Include(a => a.Practice)
         .FirstOrDefault(a => a.Id == id)
         ?.ToDTO();
         if (appointment == null)
@@ -76,6 +79,51 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         }
         _logger.LogInformation("Fetched appointment: {AppointmentJson}", JsonSerializer.Serialize(appointment));
         return Ok(appointment);
+    }
+
+    [HttpGet("{id}/patient")]
+    public IActionResult GetPatient(string id)
+    {
+        var appointment = _context.Appointments
+        .Include(a => a.Patient)
+        .FirstOrDefault(a => a.Id == id);
+        if (appointment == null || appointment.Patient == null)
+        {
+            _logger.LogWarning("Appointment with ID {Id} or its patient not found", id);
+            return NotFound();
+        }
+        _logger.LogInformation("Fetched patient for appointment {Id}: {PatientJson}", id, JsonSerializer.Serialize(appointment.Patient));
+        return Ok(appointment.Patient.ToDTO());
+    }
+
+    [HttpGet("{id}/therapist")]
+    public IActionResult GetTherapist(string id)
+    {
+        var appointment = _context.Appointments
+        .Include(a => a.Therapist)
+        .FirstOrDefault(a => a.Id == id);
+        if (appointment == null || appointment.Therapist == null)
+        {
+            _logger.LogWarning("Appointment with ID {Id} or its therapist not found", id);
+            return NotFound();
+        }
+        _logger.LogInformation("Fetched therapist for appointment {Id}: {TherapistJson}", id, JsonSerializer.Serialize(appointment.Therapist));
+        return Ok(appointment.Therapist.ToDTO());
+    }
+
+    [HttpGet("{id}/practice")]
+    public IActionResult GetPractice(string id)
+    {
+        var appointment = _context.Appointments
+        .Include(a => a.Practice)
+        .FirstOrDefault(a => a.Id == id);
+        if (appointment == null || appointment.Practice == null)
+        {
+            _logger.LogWarning("Appointment with ID {Id} or its practice not found", id);
+            return NotFound();
+        }
+        _logger.LogInformation("Fetched practice for appointment {Id}: {PracticeJson}", id, JsonSerializer.Serialize(appointment.Practice));
+        return Ok(appointment.Practice.ToDTO());
     }
 
     [HttpPost]

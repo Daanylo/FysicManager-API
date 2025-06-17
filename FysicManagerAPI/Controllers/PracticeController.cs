@@ -15,7 +15,7 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
     [HttpGet("all")]
     public IActionResult GetAll()
     {
-        var practices = _context.Practices.ToList();
+        var practices = _context.Practices.Select(p => p.ToDTO()).ToList();
         if (practices == null || practices.Count == 0)
         {
             _logger.LogInformation("No practices found");
@@ -35,7 +35,7 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
             return NotFound();
         }
         _logger.LogInformation("Fetched practice data: {PracticeJson}", JsonSerializer.Serialize(practice));
-        return Ok(practice);
+        return Ok(practice.ToDTO());
     }
 
     [HttpGet("{id}/therapists")]
@@ -50,6 +50,29 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         var therapists = practice.Therapists?.Select(t => t.ToDTO()).ToList();
         _logger.LogInformation("Fetched therapists for practice {Id}: {TherapistsJson}", id, JsonSerializer.Serialize(therapists));
         return Ok(therapists);
+    }
+
+    [HttpGet("{id}/appointments")]
+    public IActionResult GetAppointments(string id)
+    {
+        var practice = _context.Practices.FirstOrDefault(p => p.Id == id);
+        if (practice == null)
+        {
+            _logger.LogWarning("Practice with ID {Id} not found", id);
+            return NotFound();
+        }
+
+        var appointments = _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Practice)
+            .Include(a => a.Therapist)
+            .Where(a => a.Practice.Id == id)
+            .ToList()
+            .Select(a => a.ToDTO())
+            .ToList();
+        
+        _logger.LogInformation("Fetched appointments for practice {Id}: {AppointmentsJson}", id, JsonSerializer.Serialize(appointments));
+        return Ok(appointments);
     }
 
     [HttpPost]
@@ -68,7 +91,7 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         _context.Practices.Add(practice);
         _context.SaveChanges();
         _logger.LogInformation("Created new practice: {PracticeJson}", JsonSerializer.Serialize(practice));
-        return CreatedAtAction(nameof(Get), new { id = practice.Id }, practice);
+        return CreatedAtAction(nameof(Get), practice.ToDTO());
     }
 
     [HttpPut("{id}")]
@@ -113,6 +136,6 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         _context.Practices.Remove(practice);
         _context.SaveChanges();
         _logger.LogInformation("Deleted practice with ID {Id}: {PracticeJson}", id, JsonSerializer.Serialize(practice));
-        return Ok(new { Message = "Practice deleted successfully", Practice = practice });
+        return Ok(new { Message = "Practice deleted successfully", Practice = practice.ToDTO() });
     }
 }

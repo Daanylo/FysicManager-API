@@ -29,13 +29,22 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
     [HttpGet("{id}/appointments")]
     public IActionResult GetAppointments(string id)
     {
-        var patient = _context.Patients.Include(p => p.Appointments).FirstOrDefault(p => p.Id == id);
+        var patient = _context.Patients.FirstOrDefault(p => p.Id == id);
         if (patient == null)
         {
             _logger.LogWarning("Patient with ID {Id} not found", id);
             return NotFound();
         }
-        var appointments = patient.Appointments?.Select(a => a.ToDTO()).ToList();
+
+        var appointments = _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Practice)
+            .Include(a => a.Therapist)
+            .Where(a => a.Patient.Id == id)
+            .ToList()
+            .Select(a => a.ToDTO())
+            .ToList();
+        
         _logger.LogInformation("Fetched appointments for patient {Id}: {AppointmentsJson}", id, JsonSerializer.Serialize(appointments));
         return Ok(appointments);
     }

@@ -16,7 +16,7 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
     [HttpGet("all")]
     public IActionResult GetAll()
     {
-        var therapists = _context.Therapists.ToList();
+        var therapists = _context.Therapists.Select(t => t.ToDTO()).ToList();
         if (therapists == null || therapists.Count == 0)
         {
             _logger.LogInformation("No therapists found");
@@ -36,7 +36,7 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
             return NotFound();
         }
         _logger.LogInformation("Fetched therapist: {TherapistJson}", JsonSerializer.Serialize(therapist));
-        return Ok(therapist);
+        return Ok(therapist.ToDTO());
     }
 
     [HttpGet("{id}/workshifts")]
@@ -84,15 +84,24 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
     [HttpGet("{id}/appointments")]
     public IActionResult GetAppointments(string id)
     {
-        var therapist = _context.Therapists.Include(t => t.Appointments).FirstOrDefault(t => t.Id == id);
+        var therapist = _context.Therapists.FirstOrDefault(t => t.Id == id);
         if (therapist == null)
         {
             _logger.LogWarning("Therapist with ID {Id} not found", id);
             return NotFound();
         }
-        var appointments = therapist.Appointments?.Select(a => a.ToDTO()).ToList();
-        _logger.LogInformation("Fetched appointments for therapist {Id}: {AppointmentsJson}", id, JsonSerializer.Serialize(appointments));
-        return Ok(appointments);
+
+        // Load appointments with all necessary related entities directly
+        var appointments = _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Practice)
+            .Include(a => a.Therapist)
+            .Where(a => a.Therapist.Id == id)
+            .ToList();
+
+        var appointmentDTOs = appointments.Select(a => a.ToDTO()).ToList();
+        _logger.LogInformation("Fetched appointments for therapist {Id}: {AppointmentsJson}", id, JsonSerializer.Serialize(appointmentDTOs));
+        return Ok(appointmentDTOs);
     }
 
     [HttpPost]
@@ -106,7 +115,7 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
         _context.Therapists.Add(therapist);
         _context.SaveChanges();
         _logger.LogInformation("Created new therapist: {TherapistJson}", JsonSerializer.Serialize(therapist));
-        return CreatedAtAction(nameof(Get), new { id = therapist.Id }, therapist);
+        return CreatedAtAction(nameof(Get), therapist.ToDTO());
     }
 
     [HttpPut("{id}")]
@@ -130,7 +139,7 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
         existing.Practices = therapist.Practices;
         _context.SaveChanges();
         _logger.LogInformation("Updated therapist: {TherapistJson}", JsonSerializer.Serialize(existing));
-        return Ok(new { Message = "Therapist updated successfully", Therapist = existing });
+        return Ok(new { Message = "Therapist updated successfully", Therapist = existing.ToDTO() });
     }
 
     [HttpDelete("{id}")]
@@ -145,6 +154,6 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
         _context.Therapists.Remove(therapist);
         _context.SaveChanges();
         _logger.LogInformation("Deleted therapist with ID {Id}: {TherapistJson}", id, JsonSerializer.Serialize(therapist));
-        return Ok(new { Message = "Therapist deleted successfully", Therapist = therapist });
+        return Ok(new { Message = "Therapist deleted successfully", Therapist = therapist.ToDTO() });
     }
 }
