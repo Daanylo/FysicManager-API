@@ -127,21 +127,22 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] Appointment appointment)
+    public IActionResult Create([FromBody] AppointmentSummaryDTO appointment)
     {
         if (appointment == null)
         {
             _logger.LogError("Received null appointment data");
             return BadRequest("Appointment data cannot be null");
         }
-        _context.Appointments.Add(appointment);
+        Appointment app = ToAppointment(appointment);
+        _context.Appointments.Add(app);
         _context.SaveChanges();
         _logger.LogInformation("Created new appointment: {AppointmentJson}", JsonSerializer.Serialize(appointment));
         return CreatedAtAction(nameof(Get), new { id = appointment.Id }, appointment);
     }
 
     [HttpPut("{id}")]
-    public IActionResult Update(string id, [FromBody] Appointment appointment)
+    public IActionResult Update(string id, [FromBody] AppointmentSummaryDTO appointment)
     {
         if (appointment == null || appointment.Id != id)
         {
@@ -154,12 +155,21 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
             _logger.LogWarning("Appointment with ID {Id} not found for update", id);
             return NotFound();
         }
-        existing.Patient = appointment.Patient;
-        existing.Therapist = appointment.Therapist;
-        existing.AppointmentType = appointment.AppointmentType;
-        existing.Time = appointment.Time;
-        existing.Duration = appointment.Duration;
-        existing.Notes = appointment.Notes;
+        Appointment app = ToAppointment(appointment);
+        if (!string.IsNullOrEmpty(appointment.PatientId) && appointment.PatientId != existing.Patient?.Id)
+            existing.Patient = app.Patient;
+        if (!string.IsNullOrEmpty(appointment.TherapistId) && appointment.TherapistId != existing.Therapist?.Id)
+            existing.Therapist = app.Therapist;
+        if (!string.IsNullOrEmpty(appointment.AppointmentTypeId) && appointment.AppointmentTypeId != existing.AppointmentType?.Id)
+            existing.AppointmentType = app.AppointmentType;
+        if (!string.IsNullOrEmpty(appointment.PracticeId) && appointment.PracticeId != existing.Practice?.Id)
+            existing.Practice = app.Practice;
+        if (appointment.Time != default)
+            existing.Time = app.Time;
+        if (appointment.Duration != 0)
+            existing.Duration = app.Duration;
+        if (!string.IsNullOrEmpty(appointment.Notes))
+            existing.Notes = app.Notes;
         _context.SaveChanges();
         _logger.LogInformation("Updated appointment: {AppointmentJson}", JsonSerializer.Serialize(existing));
         return Ok(new { Message = "Appointment updated successfully", Appointment = existing });
@@ -178,5 +188,20 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         _context.SaveChanges();
         _logger.LogInformation("Deleted appointment with ID {Id}: {AppointmentJson}", id, JsonSerializer.Serialize(appointment));
         return Ok(new { Message = "Appointment deleted successfully", Appointment = appointment });
+    }
+
+    public Appointment ToAppointment(AppointmentSummaryDTO appointmentSummary)
+    {
+        return new Appointment
+        {
+            Id = appointmentSummary.Id,
+            Patient = _context.Patients.FirstOrDefault(p => p.Id == appointmentSummary.PatientId) ?? throw new ArgumentException("Patient not found"),
+            Therapist = _context.Therapists.FirstOrDefault(t => t.Id == appointmentSummary.TherapistId) ?? throw new ArgumentException("Therapist not found"),
+            Practice = _context.Practices.FirstOrDefault(p => p.Id == appointmentSummary.PracticeId) ?? throw new ArgumentException("Practice not found"),
+            AppointmentType = _context.AppointmentTypes.FirstOrDefault(at => at.Id == appointmentSummary.AppointmentTypeId) ?? throw new ArgumentException("Appointment Type not found"),
+            Time = appointmentSummary.Time,
+            Duration = appointmentSummary.Duration,
+            Notes = appointmentSummary.Notes
+        };
     }
 }
