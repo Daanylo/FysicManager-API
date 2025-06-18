@@ -9,16 +9,14 @@ public class Workshift
     public string Id { get; init; } = Guid.NewGuid().ToString();
 
     [JsonPropertyName("startTime")]
-    public required DateTime StartTime { get; set; }
-
-    [JsonPropertyName("endTime")]
+    public required DateTime StartTime { get; set; }    [JsonPropertyName("endTime")]
     public required DateTime EndTime { get; set; }
 
-    [JsonPropertyName("therapist")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public required Therapist Therapist { get; set; }
 
-    [JsonPropertyName("practice")]
-    public required Practice Practice { get; set; }    public WorkshiftDTO ToDTO()
+    [JsonIgnore] // Prevent circular reference during JSON serialization
+    public required Practice Practice { get; set; }public WorkshiftDTO ToDTO()
     {
         return new WorkshiftDTO
         {

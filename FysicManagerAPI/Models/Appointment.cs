@@ -6,16 +6,15 @@ namespace FysicManagerAPI.Models;
 public record Appointment
 {
     [JsonPropertyName("id")]
-    public string Id { get; init; } = Guid.NewGuid().ToString();
-    [JsonPropertyName("description")]
+    public string Id { get; init; } = Guid.NewGuid().ToString();    [JsonPropertyName("description")]
     public string? Description { get; set; }
-    [JsonPropertyName("patient")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public required Patient Patient { get; set; }
-    [JsonPropertyName("therapist")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public required Therapist Therapist { get; set; }
-    [JsonPropertyName("practice")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public required Practice Practice { get; set; }
-    [JsonPropertyName("appointmentType")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public required AppointmentType AppointmentType { get; set; }
     [JsonPropertyName("time")]
     public DateTime Time { get; set; }

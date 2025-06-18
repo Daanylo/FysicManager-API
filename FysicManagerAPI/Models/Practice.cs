@@ -30,12 +30,10 @@ public class Practice
     public string? Email { get; set; }
 
     [JsonPropertyName("website")]
-    public string? Website { get; set; }
-
-    [JsonPropertyName("color")]
+    public string? Website { get; set; }    [JsonPropertyName("color")]
     public string? Color { get; set; }
 
-    [JsonPropertyName("therapists")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public List<Therapist>? Therapists { get; set; } = [];
 
     public PracticeDTO ToDTO()

@@ -27,10 +27,9 @@ public record Patient
     [JsonPropertyName("postalCode")]
     public string? PostalCode { get; set; }
     [JsonPropertyName("city")]
-    public string? City { get; set; }
-    [JsonPropertyName("country")]
+    public string? City { get; set; }    [JsonPropertyName("country")]
     public string? Country { get; set; }
-    [JsonPropertyName("appointments")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public List<Appointment>? Appointments { get; set; } = [];
 
     public PatientDTO ToDTO()

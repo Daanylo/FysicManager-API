@@ -9,11 +9,10 @@ public class Specialization
     public string Id { get; init; } = Guid.NewGuid().ToString();
 
     [JsonPropertyName("name")]
-    public string? Name { get; set; }
-
-    [JsonPropertyName("description")]
+    public string? Name { get; set; }    [JsonPropertyName("description")]
     public string? Description { get; set; }
-    [JsonPropertyName("therapists")]
+    
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public List<Therapist>? Therapists { get; set; }
 
     public SpecializationDTO ToDTO()

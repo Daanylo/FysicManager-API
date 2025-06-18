@@ -11,7 +11,7 @@ public class Therapist
     [JsonPropertyName("name")]
     public string? Name { get; set; }
 
-    [JsonPropertyName("specializations")]
+    [JsonPropertyName("specializations")]    [JsonIgnore] // Prevent circular reference during JSON serialization
     public List<Specialization>? Specializations { get; set; }
 
     [JsonPropertyName("phoneNumber")]
@@ -20,11 +20,11 @@ public class Therapist
     [JsonPropertyName("email")]
     public string? Email { get; set; }
 
-    [JsonPropertyName("practices")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public List<Practice>? Practices { get; set; } = [];
-    [JsonPropertyName("workshifts")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public List<Workshift>? Workshifts { get; set; } = [];
-    [JsonPropertyName("appointments")]
+    [JsonIgnore] // Prevent circular reference during JSON serialization
     public List<Appointment>? Appointments { get; set; } = [];
 
     
