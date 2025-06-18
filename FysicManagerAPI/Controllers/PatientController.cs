@@ -47,22 +47,19 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
         
         _logger.LogInformation("Fetched appointments for patient {Id}: {AppointmentsJson}", id, JsonSerializer.Serialize(appointments));
         return Ok(appointments);
-    }
-
-    [HttpGet("search")]
+    }    [HttpGet("search")]
     public IActionResult Search([FromQuery] string? searchQuery)
     {
         var query = _context.Patients.AsQueryable();
         _logger.LogInformation("Searching patients with query: {SearchQuery}", searchQuery);
         if (!string.IsNullOrEmpty(searchQuery))
         {
-            searchQuery = searchQuery.Trim();
-            query = query.Where(p => (p.FirstName != null && p.FirstName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) ||
-                                     (p.LastName != null && p.LastName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) ||
-                                     (p.PhoneNumber != null && p.PhoneNumber.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) ||
-                                     (p.Email != null && p.Email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) ||
-                                     (p.BSN != null && p.BSN.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) ||
-                                     p.DateOfBirth.ToString("dd-MM-yyyy").Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+            searchQuery = searchQuery.Trim().ToLower();
+            query = query.Where(p => (p.FirstName != null && p.FirstName.ToLower().Contains(searchQuery)) ||
+                                     (p.LastName != null && p.LastName.ToLower().Contains(searchQuery)) ||
+                                     (p.PhoneNumber != null && p.PhoneNumber.Contains(searchQuery)) ||
+                                     (p.Email != null && p.Email.ToLower().Contains(searchQuery)) ||
+                                     (p.BSN != null && p.BSN.Contains(searchQuery)));
         }
 
         var patients = query.Select(p => p.ToDTO()).ToList();
