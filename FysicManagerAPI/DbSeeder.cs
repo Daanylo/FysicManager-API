@@ -25,10 +25,10 @@ public static class DbSeeder
         {
             db.AppointmentTypes.AddRange(new List<AppointmentType>
             {
-                new() { Name = "1000 - behandeling fysiotherapie", Description = "Standaard fysiotherapie behandeling in praktijk" },
-                new() { Name = "1864 - intake en onderzoek fysiotherapie", Description = "Intake en onderzoek voor fysiotherapie" },
-                new() { Name = "1600 - behandeling bekkentherapie", Description = "Bekkentherapie behandeling in praktijk" },
-                new() { Name = "1001 - behandeling fysiotherapie incl. aan huis toeslag", Description = "Fysiotherapie behandeling aan huis met toeslag" },
+                new() { Name = "1000 - behandeling fysiotherapie", Description = "Standaard fysiotherapie behandeling in praktijk", Color = "#FF5733" },
+                new() { Name = "1864 - intake en onderzoek fysiotherapie", Description = "Intake en onderzoek voor fysiotherapie", Color = "#33FF57" },
+                new() { Name = "1600 - behandeling bekkentherapie", Description = "Bekkentherapie behandeling in praktijk", Color = "#3357FF" },
+                new() { Name = "1001 - behandeling fysiotherapie incl. aan huis toeslag", Description = "Fysiotherapie behandeling aan huis met toeslag", Color = "#FF33A1" },
             });
             db.SaveChanges();
         }
@@ -91,6 +91,7 @@ public static class DbSeeder
             {
                 new()
                 {
+                    Description = "Nekklachten",
                     Patient = patient1,
                     Practice = practice1,
                     Therapist = therapist1,
@@ -101,6 +102,7 @@ public static class DbSeeder
                 },
                 new()
                 {
+                    Description = "Schouderklachten",
                     Patient = patient2,
                     Practice = practice2,
                     Therapist = therapist2,

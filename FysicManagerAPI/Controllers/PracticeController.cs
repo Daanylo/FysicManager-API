@@ -93,13 +93,13 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
         _logger.LogInformation("Created new practice: {PracticeJson}", JsonSerializer.Serialize(practice));
         return CreatedAtAction(nameof(Get), practice.ToDTO());
     }
-
     [HttpPut("{id}")]
     public IActionResult Update(string id, [FromBody] Practice practice)
     {
         if (practice == null)
         {
             _logger.LogError("Received invalid practice data for update");
+            _logger.LogInformation("Received practice data: {PracticeJson}", JsonSerializer.Serialize(practice));
             return BadRequest("Invalid practice data");
         }
         var existing = _context.Practices.Find(id);
@@ -109,19 +109,28 @@ public class PracticeController(ILogger<PracticeController> logger, AppDbContext
             return NotFound();
         }
 
-        if (practice.Name != null) existing.Name = practice.Name;
-        if (practice.Address != null) existing.Address = practice.Address;
-        if (practice.PostalCode != null) existing.PostalCode = practice.PostalCode;
-        if (practice.City != null) existing.City = practice.City;
-        if (practice.Country != null) existing.Country = practice.Country;
-        if (practice.PhoneNumber != null) existing.PhoneNumber = practice.PhoneNumber;
-        if (practice.Email != null) existing.Email = practice.Email;
-        if (practice.Website != null) existing.Website = practice.Website;
-        if (practice.Color != null) existing.Color = practice.Color;
+        if (!string.IsNullOrEmpty(practice.Name) && practice.Name != existing.Name)
+            existing.Name = practice.Name;
+        if (!string.IsNullOrEmpty(practice.Address) && practice.Address != existing.Address)
+            existing.Address = practice.Address;
+        if (!string.IsNullOrEmpty(practice.PostalCode) && practice.PostalCode != existing.PostalCode)
+            existing.PostalCode = practice.PostalCode;
+        if (!string.IsNullOrEmpty(practice.City) && practice.City != existing.City)
+            existing.City = practice.City;
+        if (!string.IsNullOrEmpty(practice.Country) && practice.Country != existing.Country)
+            existing.Country = practice.Country;
+        if (!string.IsNullOrEmpty(practice.PhoneNumber) && practice.PhoneNumber != existing.PhoneNumber)
+            existing.PhoneNumber = practice.PhoneNumber;
+        if (!string.IsNullOrEmpty(practice.Email) && practice.Email != existing.Email)
+            existing.Email = practice.Email;
+        if (!string.IsNullOrEmpty(practice.Website) && practice.Website != existing.Website)
+            existing.Website = practice.Website;
+        if (!string.IsNullOrEmpty(practice.Color) && practice.Color != existing.Color)
+            existing.Color = practice.Color;
 
         _context.SaveChanges();
         _logger.LogInformation("Updated practice with ID {Id}: {PracticeJson}", id, JsonSerializer.Serialize(existing));
-        return Ok(existing);
+        return Ok(new { Message = "Practice updated successfully", Practice = existing.ToDTO() });
     }
 
     [HttpDelete("{id}")]

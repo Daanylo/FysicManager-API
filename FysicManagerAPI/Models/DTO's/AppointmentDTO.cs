@@ -7,6 +7,8 @@ public record AppointmentDTO
 {
     [JsonPropertyName("id")]
     public string Id { get; init; } = Guid.NewGuid().ToString();
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
 
     [JsonPropertyName("patient")]
     public required PatientDTO Patient { get; set; }
@@ -32,6 +34,8 @@ public record AppointmentSummaryDTO
 {
     [JsonPropertyName("id")]
     public string Id { get; init; } = Guid.NewGuid().ToString();
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
 
     [JsonPropertyName("patientId")]
     public required string PatientId { get; set; }

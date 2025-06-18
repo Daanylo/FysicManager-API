@@ -25,21 +25,8 @@ public class Workshift
             Id = Id,
             StartTime = StartTime,
             EndTime = EndTime,
-            Therapist = Therapist?.ToDTO() ?? new TherapistDTO 
-            { 
-                Id = "unknown", 
-                Name = "Unknown Therapist", 
-                Email = "", 
-                PhoneNumber = "" 
-            },
-            Practice = Practice?.ToDTO() ?? new PracticeDTO 
-            { 
-                Id = "unknown", 
-                Name = "Unknown Practice", 
-                Address = "", 
-                PhoneNumber = "", 
-                Email = "" 
-            }
+            Therapist = Therapist?.ToDTO() ?? throw new InvalidOperationException("Therapist cannot be null"),
+            Practice = Practice?.ToDTO() ?? throw new InvalidOperationException("Practice cannot be null")
         };
     }
 }

@@ -66,21 +66,30 @@ public class SpecializationController(ILogger<SpecializationController> logger, 
         _logger.LogInformation("Created specialization: {Specialization}", JsonSerializer.Serialize(specialization));
         return CreatedAtAction(nameof(Get), new { id = specialization.Id }, specialization);
     }
-
     [HttpPut("{id}")]
     public IActionResult Update(string id, [FromBody] Specialization updatedSpecialization)
     {
+        if (updatedSpecialization == null)
+        {
+            _logger.LogError("Received invalid specialization data for update");
+            _logger.LogInformation("Received specialization data: {SpecializationJson}", JsonSerializer.Serialize(updatedSpecialization));
+            return BadRequest("Invalid specialization data");
+        }
         var specialization = _context.Specializations.Find(id);
         if (specialization == null)
         {
             _logger.LogWarning("Specialization with ID {Id} not found for update.", id);
             return NotFound($"Specialization with ID {id} not found.");
         }
-        specialization.Name = updatedSpecialization.Name;
-        specialization.Description = updatedSpecialization.Description;
+        
+        if (!string.IsNullOrEmpty(updatedSpecialization.Name) && updatedSpecialization.Name != specialization.Name)
+            specialization.Name = updatedSpecialization.Name;
+        if (!string.IsNullOrEmpty(updatedSpecialization.Description) && updatedSpecialization.Description != specialization.Description)
+            specialization.Description = updatedSpecialization.Description;
+            
         _context.SaveChanges();
         _logger.LogInformation("Updated specialization: {Specialization}", JsonSerializer.Serialize(specialization));
-        return Ok(specialization);
+        return Ok(new { Message = "Specialization updated successfully", Specialization = specialization });
     }
 
     [HttpDelete("{id}")]

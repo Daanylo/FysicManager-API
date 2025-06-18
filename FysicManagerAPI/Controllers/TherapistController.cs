@@ -1,5 +1,6 @@
 using FysicManagerAPI.Data;
 using FysicManagerAPI.Models;
+using FysicManagerAPI.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -16,7 +17,11 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
     [HttpGet("all")]
     public IActionResult GetAll()
     {
-        var therapists = _context.Therapists.Select(t => t.ToDTO()).ToList();
+        var therapists = _context.Therapists
+        .Include(t => t.Specializations)
+        .Include(t => t.Practices)
+        .Include(t => t.Workshifts)
+        .Select(t => t.ToDTO()).ToList();
         if (therapists == null || therapists.Count == 0)
         {
             _logger.LogInformation("No therapists found");
@@ -29,7 +34,11 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
     [HttpGet("{id}")]
     public IActionResult Get(string id)
     {
-        var therapist = _context.Therapists.Find(id);
+        var therapist = _context.Therapists
+        .Include(t => t.Specializations)
+        .Include(t => t.Practices)
+        .Include(t => t.Workshifts)
+        .FirstOrDefault(t => t.Id == id);
         if (therapist == null)
         {
             _logger.LogWarning("Therapist with ID {Id} not found", id);
@@ -37,7 +46,8 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
         }
         _logger.LogInformation("Fetched therapist: {TherapistJson}", JsonSerializer.Serialize(therapist));
         return Ok(therapist.ToDTO());
-    }    [HttpGet("{id}/workshifts")]
+    }
+    [HttpGet("{id}/workshifts")]
     public IActionResult GetWorkshifts(string id)
     {
         var therapist = _context.Therapists.FirstOrDefault(t => t.Id == id);
@@ -113,41 +123,57 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
     }
 
     [HttpPost]
-    public IActionResult Create(string id, [FromBody] Therapist therapist)
+    public IActionResult Create(string id, [FromBody] TherapistDTO therapist)
     {
         if (therapist == null)
         {
             _logger.LogError("Received null therapist data");
             return BadRequest("Therapist data cannot be null");
         }
-        _context.Therapists.Add(therapist);
+        Therapist newTherapist = ToTherapist(therapist);
+        _context.Therapists.Add(newTherapist);
         _context.SaveChanges();
         _logger.LogInformation("Created new therapist: {TherapistJson}", JsonSerializer.Serialize(therapist));
-        return CreatedAtAction(nameof(Get), therapist.ToDTO());
+        return CreatedAtAction(nameof(Get), newTherapist.ToDTO());
     }
-
     [HttpPut("{id}")]
-    public IActionResult Update(string id, [FromBody] Therapist therapist)
+    public IActionResult Update(string id, [FromBody] TherapistDTO therapist)
     {
-        if (therapist == null || therapist.Id != id)
+        if (therapist == null)
         {
             _logger.LogError("Received invalid therapist data for update");
+            _logger.LogInformation("Received therapist data: {TherapistJson}", JsonSerializer.Serialize(therapist));
             return BadRequest("Invalid therapist data");
         }
-        var existing = _context.Therapists.Find(id);
-        if (existing == null)
+        var existingTherapist = _context.Therapists
+        .Include(t => t.Specializations)
+        .Include(t => t.Practices)
+        .FirstOrDefault(t => t.Id == id);
+        if (existingTherapist == null)
         {
             _logger.LogWarning("Therapist with ID {Id} not found for update", id);
             return NotFound();
         }
-        existing.Name = therapist.Name;
-        existing.Specializations = therapist.Specializations;
-        existing.PhoneNumber = therapist.PhoneNumber;
-        existing.Email = therapist.Email;
-        existing.Practices = therapist.Practices;
+        var existing = existingTherapist.ToDTO();
+        if (!string.IsNullOrEmpty(therapist.Name) && therapist.Name != existing.Name)
+            existing.Name = therapist.Name;
+        if (therapist.SpecializationIds != null && !therapist.SpecializationIds.SequenceEqual(existing.SpecializationIds ?? []))
+            existing.SpecializationIds = therapist.SpecializationIds;
+        if (!string.IsNullOrEmpty(therapist.PhoneNumber) && therapist.PhoneNumber != existing.PhoneNumber)
+            existing.PhoneNumber = therapist.PhoneNumber;
+        if (!string.IsNullOrEmpty(therapist.Email) && therapist.Email != existing.Email)
+            existing.Email = therapist.Email;
+        if (therapist.PracticeIds != null && therapist.PracticeIds.SequenceEqual(existing.PracticeIds ?? []))
+            existing.PracticeIds = therapist.PracticeIds;
+        var updatedTherapist = ToTherapist(existing);
+        existingTherapist.Name = updatedTherapist.Name;
+        existingTherapist.PhoneNumber = updatedTherapist.PhoneNumber;
+        existingTherapist.Email = updatedTherapist.Email;
+        existingTherapist.Specializations = updatedTherapist.Specializations;
+        existingTherapist.Practices = updatedTherapist.Practices;
         _context.SaveChanges();
         _logger.LogInformation("Updated therapist: {TherapistJson}", JsonSerializer.Serialize(existing));
-        return Ok(new { Message = "Therapist updated successfully", Therapist = existing.ToDTO() });
+        return Ok(new { Message = "Therapist updated successfully", Therapist = updatedTherapist.ToDTO() });
     }
 
     [HttpDelete("{id}")]
@@ -163,5 +189,25 @@ public class TherapistController(ILogger<TherapistController> logger, AppDbConte
         _context.SaveChanges();
         _logger.LogInformation("Deleted therapist with ID {Id}: {TherapistJson}", id, JsonSerializer.Serialize(therapist));
         return Ok(new { Message = "Therapist deleted successfully", Therapist = therapist.ToDTO() });
+    }
+
+    public Therapist ToTherapist(TherapistDTO therapistDTO)
+    {
+        return new Therapist
+        {
+            Id = therapistDTO.Id,
+            Name = therapistDTO.Name,
+            PhoneNumber = therapistDTO.PhoneNumber,
+            Email = therapistDTO.Email,
+            Specializations = therapistDTO.SpecializationIds != null
+            ? [.. _context.Specializations.Where(s => therapistDTO.SpecializationIds.Contains(s.Id))]
+            : [],
+            Practices = therapistDTO.PracticeIds != null
+            ? [.. _context.Practices.Where(p => therapistDTO.PracticeIds.Contains(p.Id))]
+            : [],
+            Workshifts = therapistDTO.WorkshiftIds != null
+            ?[.._context.Workshifts.Where(ws => therapistDTO.WorkshiftIds.Contains(ws.Id))]
+            : []
+        };
     }
 }

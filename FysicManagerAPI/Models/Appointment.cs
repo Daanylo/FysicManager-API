@@ -7,6 +7,8 @@ public record Appointment
 {
     [JsonPropertyName("id")]
     public string Id { get; init; } = Guid.NewGuid().ToString();
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
     [JsonPropertyName("patient")]
     public required Patient Patient { get; set; }
     [JsonPropertyName("therapist")]
@@ -27,28 +29,27 @@ public record Appointment
         return new AppointmentDTO
         {
             Id = Id,
-            Patient = Patient?.ToDTO() ?? new PatientDTO { 
-                Id = "unknown", 
-                FirstName = "Unknown", 
-                LastName = "Patient", 
-                DateOfBirth = DateTime.MinValue, 
-                Email = "", 
-                PhoneNumber = "" 
-            },
-            Therapist = Therapist?.ToDTO() ?? new TherapistDTO { 
-                Id = "unknown", 
-                Name = "Unknown Therapist", 
-                Email = "", 
-                PhoneNumber = "" 
-            },
-            Practice = Practice?.ToDTO() ?? new PracticeDTO { 
-                Id = "unknown", 
-                Name = "Unknown Practice", 
-                Address = "", 
-                PhoneNumber = "", 
-                Email = "" 
-            },
+            Description = Description,
+            Patient = Patient?.ToDTO() ?? throw new ArgumentNullException(nameof(Patient), "Patient cannot be null"),
+            Therapist = Therapist?.ToDTO() ?? throw new ArgumentNullException(nameof(Therapist), "Therapist cannot be null"),
+            Practice = Practice?.ToDTO() ?? throw new ArgumentNullException(nameof(Practice), "Practice cannot be null"),
             AppointmentType = AppointmentType,
+            Time = Time,
+            Duration = Duration,
+            Notes = Notes
+        };
+    }
+    
+    public AppointmentSummaryDTO ToSummaryDTO()
+    {
+        return new AppointmentSummaryDTO
+        {
+            Id = Id,
+            Description = Description,
+            PatientId = Patient?.Id ?? throw new ArgumentNullException(nameof(Patient), "Patient cannot be null"),
+            TherapistId = Therapist?.Id ?? throw new ArgumentNullException(nameof(Therapist), "Therapist cannot be null"),
+            PracticeId = Practice?.Id ?? throw new ArgumentNullException(nameof(Practice), "Practice cannot be null"),
+            AppointmentTypeId = AppointmentType.Id,
             Time = Time,
             Duration = Duration,
             Notes = Notes

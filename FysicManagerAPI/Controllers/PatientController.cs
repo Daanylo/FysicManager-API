@@ -89,13 +89,13 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
         _logger.LogInformation("Patient created: {PatientJson}", JsonSerializer.Serialize(patient));
         return CreatedAtAction(nameof(Get), new { id = patient.Id }, patient);
     }
-
     [HttpPut("{id}")]
     public IActionResult Update(string id, [FromBody] Patient patient)
     {
-        if (patient == null || patient.Id != id)
+        if (patient == null)
         {
             _logger.LogError("Received invalid patient data for update");
+            _logger.LogInformation("Received patient data: {PatientJson}", JsonSerializer.Serialize(patient));
             return BadRequest("Invalid patient data");
         }
         var existing = _context.Patients.Find(id);
@@ -104,19 +104,33 @@ public class PatientController(ILogger<PatientController> logger, AppDbContext c
             _logger.LogWarning("Patient with ID {Id} not found for update", id);
             return NotFound();
         }
-        existing.FirstName = patient.FirstName;
-        existing.LastName = patient.LastName;
-        existing.Initials = patient.Initials;
-        existing.DateOfBirth = patient.DateOfBirth;
-        existing.Email = patient.Email;
-        existing.PhoneNumber = patient.PhoneNumber;
-        existing.Address = patient.Address;
-        existing.PostalCode = patient.PostalCode;
-        existing.City = patient.City;
-        existing.Country = patient.Country;
+        
+        if (!string.IsNullOrEmpty(patient.FirstName) && patient.FirstName != existing.FirstName)
+            existing.FirstName = patient.FirstName;
+        if (!string.IsNullOrEmpty(patient.LastName) && patient.LastName != existing.LastName)
+            existing.LastName = patient.LastName;
+        if (!string.IsNullOrEmpty(patient.Initials) && patient.Initials != existing.Initials)
+            existing.Initials = patient.Initials;
+        if (patient.DateOfBirth != default && patient.DateOfBirth != existing.DateOfBirth)
+            existing.DateOfBirth = patient.DateOfBirth;
+        if (!string.IsNullOrEmpty(patient.Email) && patient.Email != existing.Email)
+            existing.Email = patient.Email;
+        if (!string.IsNullOrEmpty(patient.PhoneNumber) && patient.PhoneNumber != existing.PhoneNumber)
+            existing.PhoneNumber = patient.PhoneNumber;
+        if (!string.IsNullOrEmpty(patient.Address) && patient.Address != existing.Address)
+            existing.Address = patient.Address;
+        if (!string.IsNullOrEmpty(patient.PostalCode) && patient.PostalCode != existing.PostalCode)
+            existing.PostalCode = patient.PostalCode;
+        if (!string.IsNullOrEmpty(patient.City) && patient.City != existing.City)
+            existing.City = patient.City;
+        if (!string.IsNullOrEmpty(patient.Country) && patient.Country != existing.Country)
+            existing.Country = patient.Country;
+        if (!string.IsNullOrEmpty(patient.BSN) && patient.BSN != existing.BSN)
+            existing.BSN = patient.BSN;
+            
         _context.SaveChanges();
         _logger.LogInformation("Patient updated: {PatientJson}", JsonSerializer.Serialize(existing));
-        return Ok(existing);
+        return Ok(new { Message = "Patient updated successfully", Patient = existing.ToDTO() });
     }
 
     [HttpDelete("{id}")]

@@ -37,6 +37,9 @@ public class Therapist
             Name = Name,
             PhoneNumber = PhoneNumber,
             Email = Email,
+            SpecializationIds = Specializations?.Select(s => s.Id).ToList() ?? [],
+            PracticeIds = Practices?.Select(p => p.Id).ToList() ?? [],
+            WorkshiftIds = Workshifts?.Select(w => w.Id).ToList() ?? [],
         };
     }
 }

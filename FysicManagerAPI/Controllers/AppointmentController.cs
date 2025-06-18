@@ -144,35 +144,52 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
     [HttpPut("{id}")]
     public IActionResult Update(string id, [FromBody] AppointmentSummaryDTO appointment)
     {
-        if (appointment == null || appointment.Id != id)
+        if (appointment == null)
         {
             _logger.LogError("Received invalid appointment data for update");
+            _logger.LogInformation("Received appointment data: {AppointmentJson}", JsonSerializer.Serialize(appointment));
             return BadRequest("Invalid appointment data");
         }
-        var existing = _context.Appointments.Find(id);
-        if (existing == null)
+        var existingAppointment = _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Therapist)
+            .Include(a => a.AppointmentType)
+            .Include(a => a.Practice)
+        .FirstOrDefault(a => a.Id == id);
+        if (existingAppointment == null)
         {
             _logger.LogWarning("Appointment with ID {Id} not found for update", id);
             return NotFound();
         }
-        Appointment app = ToAppointment(appointment);
-        if (!string.IsNullOrEmpty(appointment.PatientId) && appointment.PatientId != existing.Patient?.Id)
-            existing.Patient = app.Patient;
-        if (!string.IsNullOrEmpty(appointment.TherapistId) && appointment.TherapistId != existing.Therapist?.Id)
-            existing.Therapist = app.Therapist;
-        if (!string.IsNullOrEmpty(appointment.AppointmentTypeId) && appointment.AppointmentTypeId != existing.AppointmentType?.Id)
-            existing.AppointmentType = app.AppointmentType;
-        if (!string.IsNullOrEmpty(appointment.PracticeId) && appointment.PracticeId != existing.Practice?.Id)
-            existing.Practice = app.Practice;
+        var existing = existingAppointment.ToSummaryDTO();
+        if (!string.IsNullOrEmpty(appointment.Description) && appointment.Description != existing.Description)
+            existing.Description = appointment.Description;
+        if (!string.IsNullOrEmpty(appointment.PatientId) && appointment.PatientId != existing.PatientId)
+            existing.PatientId = appointment.PatientId;
+        if (!string.IsNullOrEmpty(appointment.TherapistId) && appointment.TherapistId != existing.TherapistId)
+            existing.TherapistId = appointment.TherapistId;
+        if (!string.IsNullOrEmpty(appointment.AppointmentTypeId) && appointment.AppointmentTypeId != existing.AppointmentTypeId)
+            existing.AppointmentTypeId = appointment.AppointmentTypeId;
+        if (!string.IsNullOrEmpty(appointment.PracticeId) && appointment.PracticeId != existing.PracticeId)
+            existing.PracticeId = appointment.PracticeId;
         if (appointment.Time != default)
-            existing.Time = app.Time;
+            existing.Time = appointment.Time;
         if (appointment.Duration != 0)
-            existing.Duration = app.Duration;
+            existing.Duration = appointment.Duration;
         if (!string.IsNullOrEmpty(appointment.Notes))
-            existing.Notes = app.Notes;
+            existing.Notes = appointment.Notes;
+        var updatedAppointment = ToAppointment(existing);
+        existingAppointment.Description = updatedAppointment.Description;
+        existingAppointment.Patient = updatedAppointment.Patient;
+        existingAppointment.Therapist = updatedAppointment.Therapist;
+        existingAppointment.AppointmentType = updatedAppointment.AppointmentType;
+        existingAppointment.Practice = updatedAppointment.Practice;
+        existingAppointment.Time = updatedAppointment.Time;
+        existingAppointment.Duration = updatedAppointment.Duration;
+        existingAppointment.Notes = updatedAppointment.Notes;
         _context.SaveChanges();
         _logger.LogInformation("Updated appointment: {AppointmentJson}", JsonSerializer.Serialize(existing));
-        return Ok(new { Message = "Appointment updated successfully", Appointment = existing });
+        return Ok(new { Message = "Appointment updated successfully", Appointment = updatedAppointment.ToDTO() });
     }
 
     [HttpDelete("{id}")]
@@ -195,10 +212,11 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         return new Appointment
         {
             Id = appointmentSummary.Id,
+            Description = appointmentSummary.Description,
             Patient = _context.Patients.FirstOrDefault(p => p.Id == appointmentSummary.PatientId) ?? throw new ArgumentException("Patient not found"),
             Therapist = _context.Therapists.FirstOrDefault(t => t.Id == appointmentSummary.TherapistId) ?? throw new ArgumentException("Therapist not found"),
             Practice = _context.Practices.FirstOrDefault(p => p.Id == appointmentSummary.PracticeId) ?? throw new ArgumentException("Practice not found"),
-            AppointmentType = _context.AppointmentTypes.FirstOrDefault(at => at.Id == appointmentSummary.AppointmentTypeId) ?? throw new ArgumentException("Appointment Type not found"),
+            AppointmentType = _context.AppointmentTypes.FirstOrDefault(at => at.Id == appointmentSummary.AppointmentTypeId) ?? throw new ArgumentException("Appointment type not found"),
             Time = appointmentSummary.Time,
             Duration = appointmentSummary.Duration,
             Notes = appointmentSummary.Notes
