@@ -9,7 +9,8 @@ public class Specialization
     public string Id { get; init; } = Guid.NewGuid().ToString();
 
     [JsonPropertyName("name")]
-    public string? Name { get; set; }    [JsonPropertyName("description")]
+    public string? Name { get; set; }
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
     
     [JsonIgnore] // Prevent circular reference during JSON serialization
