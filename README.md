@@ -269,3 +269,7 @@ For support and questions:
 - Built with .NET 9 and Entity Framework Core
 - Designed for Dutch physiotherapy practice requirements
 - Timezone handling optimized for European operations
+
+<div align="center">
+    <img src="https://mmmlabel.tech/wp-content/themes/mmmlabel/icons/color/128px/cyborg/cyborg.svg" alt="Made together with genAI" height="100">
+</div>
