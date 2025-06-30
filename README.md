@@ -1,4 +1,4 @@
-# FysicManagerAPI
+# FysicManager API
 
 <!-- Add your logo here -->
 ![FysicManager Logo](./fysicmanager_logo.png)
