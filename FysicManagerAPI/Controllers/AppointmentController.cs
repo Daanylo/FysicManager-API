@@ -32,9 +32,7 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         }
         _logger.LogInformation("Fetched all appointments: {AppointmentsJson}", JsonSerializer.Serialize(appointments));
         return Ok(appointments);
-    }
-
-    [HttpGet]
+    }    [HttpGet]
     public IActionResult GetFromTimespan([FromQuery] string? therapistId, [FromQuery] DateTime? start, [FromQuery] DateTime? end)
     {
         var query = _context.Appointments.AsQueryable();
@@ -44,11 +42,19 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         }
         if (start.HasValue)
         {
-            query = query.Where(a => a.Time >= start.Value);
+            // Convert local time to UTC for database comparison
+            var startUtc = start.Value.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(start.Value, DateTimeKind.Local).ToUniversalTime()
+                : start.Value.ToUniversalTime();
+            query = query.Where(a => a.Time >= startUtc);
         }
         if (end.HasValue)
         {
-            query = query.Where(a => a.Time <= end.Value);
+            // Convert local time to UTC for database comparison
+            var endUtc = end.Value.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(end.Value, DateTimeKind.Local).ToUniversalTime()
+                : end.Value.ToUniversalTime();
+            query = query.Where(a => a.Time <= endUtc);
         }
         var appointments = query
         .Include(a => a.AppointmentType)
@@ -124,9 +130,7 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         }
         _logger.LogInformation("Fetched practice for appointment {Id}: {PracticeJson}", id, JsonSerializer.Serialize(appointment.Practice));
         return Ok(appointment.Practice.ToDTO());
-    }
-
-    [HttpPost]
+    }    [HttpPost]
     public IActionResult Create([FromBody] AppointmentSummaryDTO appointment)
     {
         if (appointment == null)
@@ -134,6 +138,13 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
             _logger.LogError("Received null appointment data");
             return BadRequest("Appointment data cannot be null");
         }
+        
+        // Ensure the time is treated as local time and convert to UTC for storage
+        if (appointment.Time.Kind == DateTimeKind.Unspecified)
+        {
+            appointment.Time = DateTime.SpecifyKind(appointment.Time, DateTimeKind.Local);
+        }
+        
         Appointment app = ToAppointment(appointment);
         _context.Appointments.Add(app);
         _context.SaveChanges();
@@ -171,9 +182,15 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         if (!string.IsNullOrEmpty(appointment.AppointmentTypeId) && appointment.AppointmentTypeId != existing.AppointmentTypeId)
             existing.AppointmentTypeId = appointment.AppointmentTypeId;
         if (!string.IsNullOrEmpty(appointment.PracticeId) && appointment.PracticeId != existing.PracticeId)
-            existing.PracticeId = appointment.PracticeId;
-        if (appointment.Time != default)
+            existing.PracticeId = appointment.PracticeId;        if (appointment.Time != default)
+        {
+            // Ensure the time is treated as local time
+            if (appointment.Time.Kind == DateTimeKind.Unspecified)
+            {
+                appointment.Time = DateTime.SpecifyKind(appointment.Time, DateTimeKind.Local);
+            }
             existing.Time = appointment.Time;
+        }
         if (appointment.Duration != 0)
             existing.Duration = appointment.Duration;
         if (!string.IsNullOrEmpty(appointment.Notes))
@@ -190,25 +207,37 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
         _context.SaveChanges();
         _logger.LogInformation("Updated appointment: {AppointmentJson}", JsonSerializer.Serialize(existing));
         return Ok(new { Message = "Appointment updated successfully", Appointment = updatedAppointment.ToDTO() });
-    }
-
-    [HttpDelete("{id}")]
+    }    [HttpDelete("{id}")]
     public IActionResult Delete(string id)
     {
-        var appointment = _context.Appointments.Find(id);
+        var appointment = _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Therapist)
+            .Include(a => a.AppointmentType)
+            .Include(a => a.Practice)
+            .FirstOrDefault(a => a.Id == id);
         if (appointment == null)
         {
             _logger.LogWarning("Appointment with ID {Id} not found for deletion", id);
             return NotFound();
         }
+        
+        // Convert to DTO before deletion for logging and response
+        var appointmentDto = appointment.ToDTO();
+        
         _context.Appointments.Remove(appointment);
         _context.SaveChanges();
-        _logger.LogInformation("Deleted appointment with ID {Id}: {AppointmentJson}", id, JsonSerializer.Serialize(appointment));
-        return Ok(new { Message = "Appointment deleted successfully", Appointment = appointment });
-    }
-
-    public Appointment ToAppointment(AppointmentSummaryDTO appointmentSummary)
+        _logger.LogInformation("Deleted appointment with ID {Id}: {AppointmentJson}", id, JsonSerializer.Serialize(appointmentDto));
+        return Ok(new { Message = "Appointment deleted successfully", Appointment = appointmentDto });
+    }public Appointment ToAppointment(AppointmentSummaryDTO appointmentSummary)
     {
+        // Ensure the time is properly handled for timezone conversion
+        var appointmentTime = appointmentSummary.Time;
+        if (appointmentTime.Kind == DateTimeKind.Unspecified)
+        {
+            appointmentTime = DateTime.SpecifyKind(appointmentTime, DateTimeKind.Local);
+        }
+
         return new Appointment
         {
             Id = appointmentSummary.Id,
@@ -217,7 +246,7 @@ public class AppointmentController(ILogger<AppointmentController> logger, AppDbC
             Therapist = _context.Therapists.FirstOrDefault(t => t.Id == appointmentSummary.TherapistId) ?? throw new ArgumentException("Therapist not found"),
             Practice = _context.Practices.FirstOrDefault(p => p.Id == appointmentSummary.PracticeId) ?? throw new ArgumentException("Practice not found"),
             AppointmentType = _context.AppointmentTypes.FirstOrDefault(at => at.Id == appointmentSummary.AppointmentTypeId) ?? throw new ArgumentException("Appointment type not found"),
-            Time = appointmentSummary.Time,
+            Time = appointmentTime,
             Duration = appointmentSummary.Duration,
             Notes = appointmentSummary.Notes
         };

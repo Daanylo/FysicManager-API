@@ -113,14 +113,18 @@ public static class DbSeeder
                 }
             });
         }
-        
-        if (!db.Workshifts.Any())
+          if (!db.Workshifts.Any())
         {
             var practice1 = db.Practices.FirstOrDefault(p => p.Name == "Fysio One");
             var practice2 = db.Practices.FirstOrDefault(p => p.Name == "Fysio Two");
 
             var therapist1 = db.Therapists.FirstOrDefault(t => t.Name == "Alice Johnson");
             var therapist2 = db.Therapists.FirstOrDefault(t => t.Name == "Bob Brown");
+
+            Console.WriteLine($"Debug - practice1: {practice1?.Name ?? "NULL"}");
+            Console.WriteLine($"Debug - practice2: {practice2?.Name ?? "NULL"}");
+            Console.WriteLine($"Debug - therapist1: {therapist1?.Name ?? "NULL"}");
+            Console.WriteLine($"Debug - therapist2: {therapist2?.Name ?? "NULL"}");
 
             if (practice1 == null || practice2 == null || therapist1 == null || therapist2 == null)
             {

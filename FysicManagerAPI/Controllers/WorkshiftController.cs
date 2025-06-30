@@ -28,9 +28,7 @@ public class WorkshiftController(ILogger<WorkshiftController> logger, AppDbConte
         }
         _logger.LogInformation("Fetched all workshifts: {WorkshiftsJson}", JsonSerializer.Serialize(workshifts));
         return Ok(workshifts);
-    }
-
-    [HttpGet("{id}")]
+    }    [HttpGet("{id}")]
     public IActionResult Get(string id)
     {
         var workshift = _context.Workshifts
@@ -42,8 +40,9 @@ public class WorkshiftController(ILogger<WorkshiftController> logger, AppDbConte
             _logger.LogWarning("Workshift with ID {Id} not found", id);
             return NotFound();
         }
-        _logger.LogInformation("Fetched workshift: {WorkshiftJson}", JsonSerializer.Serialize(workshift));
-        return Ok(workshift.ToDTO());
+        var workshiftDto = workshift.ToDTO();
+        _logger.LogInformation("Fetched workshift: {WorkshiftJson}", JsonSerializer.Serialize(workshiftDto));
+        return Ok(workshiftDto);
     }
 
     [HttpGet("{id}/therapist")]
@@ -72,9 +71,7 @@ public class WorkshiftController(ILogger<WorkshiftController> logger, AppDbConte
         var practice = workshift.Practice;
         _logger.LogInformation("Fetched practice for workshift {Id}: {PracticeJson}", id, JsonSerializer.Serialize(practice));
         return Ok(practice?.ToDTO());
-    }
-
-    [HttpGet]
+    }    [HttpGet]
     public IActionResult GetFromTimespan([FromQuery] string? therapistId, [FromQuery] string? practiceId, [FromQuery] DateTime? start, [FromQuery] DateTime? end)
     {
         var query = _context.Workshifts.AsQueryable();
@@ -88,11 +85,19 @@ public class WorkshiftController(ILogger<WorkshiftController> logger, AppDbConte
         }
         if (start.HasValue)
         {
-            query = query.Where(ws => ws.StartTime >= start.Value);
+            // Convert local time to UTC for database comparison
+            var startUtc = start.Value.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(start.Value, DateTimeKind.Local).ToUniversalTime()
+                : start.Value.ToUniversalTime();
+            query = query.Where(ws => ws.StartTime >= startUtc);
         }
         if (end.HasValue)
         {
-            query = query.Where(ws => ws.EndTime <= end.Value);
+            // Convert local time to UTC for database comparison
+            var endUtc = end.Value.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(end.Value, DateTimeKind.Local).ToUniversalTime()
+                : end.Value.ToUniversalTime();
+            query = query.Where(ws => ws.EndTime <= endUtc);
         }
         var workshifts = query
             .Include(ws => ws.Therapist)
@@ -102,9 +107,7 @@ public class WorkshiftController(ILogger<WorkshiftController> logger, AppDbConte
             .ToList();
         _logger.LogInformation("Fetched workshifts with filters therapistId={TherapistId}, practiceId={PracticeId}, start={Start}, end={End}: {WorkshiftsJson}", therapistId, practiceId, start, end, JsonSerializer.Serialize(workshifts));
         return Ok(workshifts);
-    }
-
-    [HttpPost]
+    }    [HttpPost]
     public IActionResult Create([FromBody] WorkshiftSummaryDTO workshift)
     {
         if (workshift == null)
@@ -112,20 +115,28 @@ public class WorkshiftController(ILogger<WorkshiftController> logger, AppDbConte
             _logger.LogError("Received null workshift data");
             return BadRequest("Workshift data cannot be null");
         }
+        
+        // Ensure the times are treated as local time and convert to UTC for storage
+        if (workshift.StartTime.Kind == DateTimeKind.Unspecified)
+        {
+            workshift.StartTime = DateTime.SpecifyKind(workshift.StartTime, DateTimeKind.Local);
+        }
+        if (workshift.EndTime.Kind == DateTimeKind.Unspecified)
+        {
+            workshift.EndTime = DateTime.SpecifyKind(workshift.EndTime, DateTimeKind.Local);
+        }
+        
         Workshift newWorkshift = ToWorkshift(workshift);
         _context.Workshifts.Add(newWorkshift);
         _context.SaveChanges();
         _logger.LogInformation("Created new workshift: {WorkshiftJson}", JsonSerializer.Serialize(workshift));
         return CreatedAtAction(nameof(Get), new { id = workshift.Id }, newWorkshift.ToDTO());
-    }
-
-    [HttpPut("{id}")]
+    }    [HttpPut("{id}")]
     public IActionResult Update(string id, [FromBody] Workshift workshift)
     {
         if (workshift == null)
         {
             _logger.LogError("Received invalid workshift data for update");
-            _logger.LogInformation("Received workshift data: {WorkshiftJson}", JsonSerializer.Serialize(workshift));
             return BadRequest("Invalid workshift data");
         }
         var existing = _context.Workshifts
@@ -139,41 +150,74 @@ public class WorkshiftController(ILogger<WorkshiftController> logger, AppDbConte
         }
 
         if (workshift.StartTime != default && workshift.StartTime != existing.StartTime)
-            existing.StartTime = workshift.StartTime;
+        {
+            // Ensure the time is treated as local time
+            var startTime = workshift.StartTime;
+            if (startTime.Kind == DateTimeKind.Unspecified)
+            {
+                startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Local);
+            }
+            existing.StartTime = startTime;
+        }
         if (workshift.EndTime != default && workshift.EndTime != existing.EndTime)
-            existing.EndTime = workshift.EndTime;
+        {
+            // Ensure the time is treated as local time
+            var endTime = workshift.EndTime;
+            if (endTime.Kind == DateTimeKind.Unspecified)
+            {
+                endTime = DateTime.SpecifyKind(endTime, DateTimeKind.Local);
+            }
+            existing.EndTime = endTime;
+        }
         if (workshift.Therapist != null && workshift.Therapist != existing.Therapist)
             existing.Therapist = workshift.Therapist;
         if (workshift.Practice != null && workshift.Practice != existing.Practice)
             existing.Practice = workshift.Practice;
 
         _context.SaveChanges();
-        _logger.LogInformation("Updated workshift: {WorkshiftJson}", JsonSerializer.Serialize(existing));
-        return Ok(new { Message = "Workshift updated successfully", Workshift = existing.ToDTO() });
-    }
-
-    [HttpDelete("{id}")]
+        var updatedDto = existing.ToDTO();
+        _logger.LogInformation("Updated workshift: {WorkshiftJson}", JsonSerializer.Serialize(updatedDto));
+        return Ok(new { Message = "Workshift updated successfully", Workshift = updatedDto });
+    }[HttpDelete("{id}")]
     public IActionResult Delete(string id)
     {
-        var workshift = _context.Workshifts.Find(id);
+        var workshift = _context.Workshifts
+            .Include(ws => ws.Therapist)
+            .Include(ws => ws.Practice)
+            .FirstOrDefault(ws => ws.Id == id);
         if (workshift == null)
         {
             _logger.LogWarning("Workshift with ID {Id} not found for deletion", id);
             return NotFound();
         }
+        
+        // Convert to DTO before deletion for logging and response
+        var workshiftDto = workshift.ToDTO();
+        
         _context.Workshifts.Remove(workshift);
         _context.SaveChanges();
-        _logger.LogInformation("Deleted workshift with ID {Id}: {WorkshiftJson}", id, JsonSerializer.Serialize(workshift));
-        return Ok(new { Message = "Workshift deleted successfully", Workshift = workshift.ToDTO() });
-    }
-
-    public Workshift ToWorkshift(WorkshiftSummaryDTO dto)
+        _logger.LogInformation("Deleted workshift with ID {Id}: {WorkshiftJson}", id, JsonSerializer.Serialize(workshiftDto));
+        return Ok(new { Message = "Workshift deleted successfully", Workshift = workshiftDto });
+    }    public Workshift ToWorkshift(WorkshiftSummaryDTO dto)
     {
+        // Ensure the times are properly handled for timezone conversion
+        var startTime = dto.StartTime;
+        if (startTime.Kind == DateTimeKind.Unspecified)
+        {
+            startTime = DateTime.SpecifyKind(startTime, DateTimeKind.Local);
+        }
+        
+        var endTime = dto.EndTime;
+        if (endTime.Kind == DateTimeKind.Unspecified)
+        {
+            endTime = DateTime.SpecifyKind(endTime, DateTimeKind.Local);
+        }
+
         return new Workshift
         {
             Id = dto.Id,
-            StartTime = dto.StartTime,
-            EndTime = dto.EndTime,
+            StartTime = startTime,
+            EndTime = endTime,
             Therapist = _context.Therapists.Find(dto.TherapistId) ?? throw new ArgumentException($"Therapist with ID {dto.TherapistId} not found"),
             Practice = _context.Practices.Find(dto.PracticeId) ?? throw new ArgumentException($"Practice with ID {dto.PracticeId} not found")
         };

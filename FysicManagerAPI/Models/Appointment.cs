@@ -21,10 +21,11 @@ public record Appointment
     [JsonPropertyName("duration")]
     public int Duration { get; set; }
     [JsonPropertyName("notes")]
-    public string? Notes { get; set; }
-
-    public AppointmentDTO ToDTO()
+    public string? Notes { get; set; }    public AppointmentDTO ToDTO()
     {
+        // Convert UTC time back to local time for client consumption
+        var localTime = Time.Kind == DateTimeKind.Utc ? Time.ToLocalTime() : Time;
+        
         return new AppointmentDTO
         {
             Id = Id,
@@ -33,14 +34,16 @@ public record Appointment
             Therapist = Therapist?.ToDTO() ?? throw new ArgumentNullException(nameof(Therapist), "Therapist cannot be null"),
             Practice = Practice?.ToDTO() ?? throw new ArgumentNullException(nameof(Practice), "Practice cannot be null"),
             AppointmentType = AppointmentType,
-            Time = Time,
+            Time = localTime,
             Duration = Duration,
             Notes = Notes
         };
     }
-    
-    public AppointmentSummaryDTO ToSummaryDTO()
+      public AppointmentSummaryDTO ToSummaryDTO()
     {
+        // Convert UTC time back to local time for client consumption
+        var localTime = Time.Kind == DateTimeKind.Utc ? Time.ToLocalTime() : Time;
+        
         return new AppointmentSummaryDTO
         {
             Id = Id,
@@ -49,7 +52,7 @@ public record Appointment
             TherapistId = Therapist?.Id ?? throw new ArgumentNullException(nameof(Therapist), "Therapist cannot be null"),
             PracticeId = Practice?.Id ?? throw new ArgumentNullException(nameof(Practice), "Practice cannot be null"),
             AppointmentTypeId = AppointmentType.Id,
-            Time = Time,
+            Time = localTime,
             Duration = Duration,
             Notes = Notes
         };
